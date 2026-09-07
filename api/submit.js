@@ -85,7 +85,7 @@ function describeCity(answers) {
 // WHOLE ROW if one cell is oversized — so free text is clamped well below
 // that on arrival, generous enough that no genuine answer is ever touched.
 const TEXT_LIMITS = { name: 100, phone: 30, email: 100, notes: 1200, other: 200, followUp: 400 };
-const FOLLOW_UP_KEYS = ['portfolioNote', 'serviceNote', 'coverageNote', 'rmNote', 'npsNote', 'appNote'];
+const FOLLOW_UP_KEYS = ['portfolioNote', 'serviceNote', 'coverageNote', 'rmNote', 'npsNote', 'appNote', 'otherRmsNote'];
 
 function clamp(value, max) {
   return String(value == null ? '' : value).slice(0, max);
@@ -141,7 +141,26 @@ module.exports = async function handler(req, res) {
       phone: String(answers.phone || '').trim(),
       email: String(answers.email || '').trim(),
       city: describeCity(answers),
+      // Everyone they named, then the one the detailed answers are about —
+      // without that second column nobody reading the Sheet can tell which
+      // manager the seven skillset scores belong to.
       rm: describe('rm', answers.rm, answers.rmOther),
+      primaryRm: (() => {
+        const ids = Array.isArray(answers.rm) ? answers.rm : (answers.rm ? [answers.rm] : []);
+        if (!ids.length) return '';
+        const id = ids.length === 1 ? ids[0] : (ids.includes(answers.primaryRm) ? answers.primaryRm : ids[0]);
+        return describe('rm', id, answers.rmOther);
+      })(),
+      // One cell for the managers who weren't the main contact: "Name 4/5".
+      otherRmScores: (Array.isArray(answers.rm) ? answers.rm : [])
+        .map((id) => {
+          const score = Number(answers[`rmScore_${id}`]);
+          if (!score) return '';
+          return `${describe('rm', id, answers.rmOther)} ${Math.min(5, Math.max(1, score))}/5`;
+        })
+        .filter(Boolean)
+        .join('\n'),
+      otherRmsNote: String(answers.otherRmsNote || '').trim(),
       services: describe('services', answers.services, answers.servicesOther),
       portfolioRating: rating('portfolioRating'),
       portfolioNote: String(answers.portfolioNote || '').trim(),

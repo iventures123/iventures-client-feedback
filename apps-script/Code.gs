@@ -20,13 +20,14 @@ const QUALITY_COLUMNS = [
 ];
 
 const HEADERS = [
-  'Timestamp', 'Name', 'Phone', 'Email', 'City', 'Relationship Manager', 'Services Currently Using',
+  'Timestamp', 'Name', 'Phone', 'Email', 'City', 'Deals With', 'Main Contact', 'Services Currently Using',
   'Portfolio & Allocation Rating', 'Portfolio Note', 'Reports On Time',
 ].concat(
   QUALITY_COLUMNS.map(function (c) { return c.header; })
 ).concat([
   'RM Note (day to day)', 'Walked Through', 'Wants To Hear More About',
   'RM Rating (overall)', 'RM Note',
+  'Other RM Scores', 'Other RM Note',
   'Wants Contact Every',
   'App Rating (1-10)', 'App Issues', 'App Feedback',
   'Recommend Score (0-10)', 'Recommend Reason', 'Referrals',
@@ -57,6 +58,7 @@ function doPost(e) {
     sanitizeForSheet(data.email),
     sanitizeForSheet(data.city),
     sanitizeForSheet(data.rm),
+    sanitizeForSheet(data.primaryRm),
     sanitizeForSheet(data.services),
     sanitizeForSheet(data.portfolioRating),
     sanitizeForSheet(data.portfolioNote),
@@ -69,6 +71,8 @@ function doPost(e) {
     sanitizeForSheet(data.coverageNote),
     sanitizeForSheet(data.rmRating),
     sanitizeForSheet(data.rmNote),
+    sanitizeForSheet(data.otherRmScores),
+    sanitizeForSheet(data.otherRmsNote),
     sanitizeForSheet(data.frequency),
     sanitizeForSheet(data.appRating),
     sanitizeForSheet(data.appIssues),
@@ -115,9 +119,9 @@ function formatSheet(sheet, headers) {
     .setFontWeight('bold').setBackground('#10203F').setFontColor('#FFFFFF');
   // Identity and context columns are wide; the 1-5 rating columns are narrow
   // so the whole quality block stays readable side by side on one screen.
-  var widths = [150, 150, 120, 180, 100, 180, 260, 90, 220, 170]
+  var widths = [150, 150, 120, 180, 100, 200, 160, 260, 90, 220, 170]
     .concat(QUALITY_COLUMNS.map(function () { return 75; }))
-    .concat([220, 240, 220, 90, 220, 150, 90, 240, 240, 110, 220, 260, 240, 120, 220, 340]);
+    .concat([220, 240, 220, 90, 220, 200, 220, 150, 90, 240, 240, 110, 220, 260, 240, 120, 220, 340]);
   for (var i = 0; i < headers.length && i < widths.length; i++) {
     sheet.setColumnWidth(i + 1, widths[i]);
   }

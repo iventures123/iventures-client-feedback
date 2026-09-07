@@ -15,13 +15,15 @@ Google review and never shows an answer back to the client's RM.
 |---|---|---|---|
 | 1 | First things first | Name (+ city) | Who's answering, and where they're based |
 | 2 | So we can reach you | **Mobile + email, both required** | How to call and write to them |
-| 3 | Your relationship | Which wealth RM | Who the feedback is about |
+| 3 | Your relationship | **Which RMs — multi-select** | Everyone they deal with |
+| 3a | Your main contact | Which one they deal with most | *Only if they picked several.* Points screens 7–9 at one person |
 | 4 | What we look after | Services currently using | Incl. IPO, pre-IPO, investment banking, debt syndication |
 | 5 | Your portfolio | Performance **and asset allocation mix** | 1–5 + optional note |
 | 6 | Paperwork | Tax reports & statements on time | Always / only when chased / late / a problem |
 | 7 | The day to day | **How is [RM] doing on each of these?** | Seven skillsets, 1–5 each: market knowledge, responsiveness, follow-through, understanding goals, **explaining new products (AIF, PMS, fixed income)**, proactivity, reporting |
 | 8 | Beyond the basics | **What has [RM] walked you through?** | MF, PMS, AIF, fixed income, venture funds, global ETFs, **a review of existing holdings** |
 | 9 | Just between us | Overall verdict on [RM] | 1–5 across everything above, + optional note |
+| 9a | The others | One 1–5 score per other RM, + a note | *Only if they picked several* |
 | 10 | Staying in touch | Desired contact frequency | Monthly / quarterly / half-yearly / yearly / as needed |
 | 11 | The app | iVentures Wealth app | 1–10 with a word per band, **skippable**; a low score reveals an issue picker (UI, speed, login, stale data…) |
 | 12 | The big one | Recommend score **+ referrals** | 0–10, then name / number / relationship per person, via the phone's contact picker or typed |
@@ -37,6 +39,23 @@ their answer into a preset.
 Screens are labelled by section ("Just between us") rather than "Step 4 of
 10" — a visible countdown is itself a cue that this will take a while. The
 progress bar still carries position.
+
+### More than one relationship manager
+
+Question 3 is a multi-select, because plenty of clients genuinely deal with
+several people and forcing a single pick points the whole rest of the form at
+the wrong name. Picking more than one adds exactly two screens, however many
+they name:
+
+- **Which do you deal with most** — screens 7 to 9 (the seven-skillset grid,
+  the coverage checklist, the overall verdict) are about that one person.
+  Repeating that block per manager would add three screens per extra name and
+  nobody would finish.
+- **The others** — one 1–5 score each on a single screen, plus a shared note.
+
+The Sheet gets both a "Deals With" and a "Main Contact" column. Without the
+second, nobody reading a row can tell which manager the seven detailed scores
+belong to.
 
 ### Referrals, and the contact picker
 

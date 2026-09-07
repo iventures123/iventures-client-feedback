@@ -32,12 +32,39 @@ const ICONS = {
 // Falls back to a neutral phrase if nothing's been picked yet (shouldn't
 // happen — this question comes after the RM pick — or if "Someone else" was
 // typed in.
-function selectedRmName() {
-  const id = state.answers.rm;
-  const other = (state.answers.rmOther || '').trim();
-  if (id === 'other') return other || 'them';
+// A question's options/rows can be a function, evaluated at render time —
+// the follow-up questions about relationship managers are built out of
+// whichever managers the client actually picked.
+function questionOptions(q) {
+  return typeof q.options === 'function' ? q.options() : (q.options || []);
+}
+function questionRows(q) {
+  return typeof q.rows === 'function' ? q.rows() : (q.rows || []);
+}
+
+// Plenty of clients deal with more than one person, so the answer is a list.
+function selectedRmIds() {
+  const v = state.answers.rm;
+  return Array.isArray(v) ? v : (v ? [v] : []);
+}
+
+// Whoever the detailed questions are about: the only pick when there's one,
+// and the one they nominated as their main contact when there are several.
+function primaryRmId() {
+  const ids = selectedRmIds();
+  if (ids.length <= 1) return ids[0] || '';
+  return ids.includes(state.answers.primaryRm) ? state.answers.primaryRm : ids[0];
+}
+
+function rmLabelById(id) {
+  if (id === 'other') return (state.answers.rmOther || '').trim() || 'Someone else';
   const opt = RM_OPTIONS.find((o) => o.id === id);
-  return opt ? opt.label.split(' ')[0] : 'them';
+  return opt ? opt.label : '';
+}
+
+function selectedRmName() {
+  const label = rmLabelById(primaryRmId());
+  return label ? label.split(' ')[0] : 'them';
 }
 
 const QUESTIONS = [
@@ -86,12 +113,29 @@ const QUESTIONS = [
     },
   },
   {
-    key: 'rm', type: 'single', icon: ICONS.rms,
+    // Multi-select: plenty of clients genuinely deal with more than one
+    // person, and forcing a single pick points the whole rest of the form at
+    // the wrong name.
+    key: 'rm', type: 'multi', icon: ICONS.rms,
     eyebrow: 'Your relationship',
-    title: 'Who is your wealth relationship manager?',
-    sub: 'So we know who your feedback is about. It is never shared back with them.',
-    otherPlaceholder: 'Who do you deal with?',
+    title: 'Who do you deal with at iVentures?',
+    sub: 'Pick everyone you work with. None of this is shared back with them.',
+    otherPlaceholder: 'Who else do you deal with?',
     options: RM_OPTIONS,
+  },
+  {
+    // Only when they named several. The detailed questions that follow have
+    // to be about one person to mean anything, so we ask which one rather
+    // than guessing from the order the chips happen to sit in.
+    key: 'primaryRm', type: 'single', icon: ICONS.rms,
+    eyebrow: 'Your main contact',
+    showIf: () => selectedRmIds().length > 1,
+    title: 'Which of them do you deal with most?',
+    sub: 'The next few questions are about that one person — there is a place for the others straight after.',
+    options: () => selectedRmIds().map((id) => {
+      const opt = RM_OPTIONS.find((o) => o.id === id);
+      return { id, label: rmLabelById(id), sub: opt ? opt.sub : '' };
+    }),
   },
   {
     key: 'services', type: 'multi', icon: ICONS.services,
@@ -158,6 +202,23 @@ const QUESTIONS = [
       : `Overall, how would you rate ${selectedRmName()} across all of this?`),
     sub: 'Everything together — knowledge, responsiveness, ideas, the lot. For our team\u2019s eyes only, never shared with your RM.',
     followUp: { key: 'rmNote', label: 'Anything you\u2019d like to tell us about them? (optional)', placeholder: 'Whatever you\u2019d say if they weren\u2019t in the room\u2026' },
+  },
+  {
+    // Everyone else they named, on a single screen. Repeating the seven-row
+    // grid per manager would add three screens per extra name and nobody
+    // would finish; one considered score each is the honest trade.
+    key: 'otherRms', type: 'grid', icon: ICONS.rms,
+    eyebrow: 'The others',
+    showIf: () => selectedRmIds().length > 1,
+    title: 'And how are the others doing?',
+    sub: 'One tap each — 1 needs work, 5 is excellent.',
+    rows: () => selectedRmIds()
+      .filter((id) => id !== primaryRmId())
+      .map((id) => {
+        const opt = RM_OPTIONS.find((o) => o.id === id);
+        return { key: `rmScore_${id}`, label: rmLabelById(id), sub: opt ? opt.sub : '' };
+      }),
+    followUp: { key: 'otherRmsNote', label: 'Anything to add about any of them? (optional)', placeholder: 'Whatever you would say if they weren’t in the room…' },
   },
   {
     // The single most fixable thing on this form: a client who wants monthly
@@ -557,7 +618,7 @@ function renderQuestion(q) {
   const current = state.answers[q.key];
   const isMulti = q.type === 'multi';
 
-  q.options.forEach((opt) => {
+  questionOptions(q).forEach((opt) => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'choice';
@@ -592,7 +653,8 @@ function renderQuestion(q) {
         // An exclusive pick can deselect buttons other than the one tapped,
         // so repaint the whole grid rather than just this button.
         if (q.exclusiveOption) {
-          el.choiceGrid.querySelectorAll('.choice').forEach((b, i) => paintChoice(b, set.has(q.options[i].id)));
+          const opts = questionOptions(q);
+          el.choiceGrid.querySelectorAll('.choice').forEach((b, i) => paintChoice(b, set.has(opts[i].id)));
         } else {
           paintChoice(btn, set.has(opt.id));
         }
@@ -707,9 +769,10 @@ function paintChoice(btn, selected) {
 
 function syncOtherInput(q) {
   if (!q.options) { el.otherInputWrap.hidden = true; return; }
+  const opts = questionOptions(q);
   const current = state.answers[q.key];
   const selectedIds = Array.isArray(current) ? current : current ? [current] : [];
-  const wanted = q.options.some((o) => o.hasOther && selectedIds.includes(o.id));
+  const wanted = opts.some((o) => o.hasOther && selectedIds.includes(o.id));
   el.otherInputWrap.hidden = !wanted;
   if (wanted) {
     el.otherInput.oninput = () => {
@@ -777,7 +840,7 @@ function renderGrid(q) {
   const wrap = document.createElement('div');
   wrap.className = 'grid-rows';
 
-  q.rows.forEach((row) => {
+  questionRows(q).forEach((row) => {
     const rowEl = document.createElement('div');
     rowEl.className = 'grid-row';
 
@@ -860,13 +923,13 @@ function renderGrid(q) {
 }
 
 function gridAnsweredCount(q) {
-  return q.rows.filter((row) => Number(state.answers[row.key]) > 0).length;
+  return questionRows(q).filter((row) => Number(state.answers[row.key]) > 0).length;
 }
 
 function updateGridProgress(q) {
   const counter = document.getElementById('gridCounter');
   const done = gridAnsweredCount(q);
-  const total = q.rows.length;
+  const total = questionRows(q).length;
   if (counter) {
     counter.textContent = done === total ? 'All done — thank you' : `${done} of ${total} answered`;
     counter.classList.toggle('grid-counter-done', done === total);
@@ -1286,7 +1349,7 @@ function updateContinueVisibility(q) {
     // Every row required: a half-filled matrix can't be compared across
     // clients or RMs, which is the only reason to ask it this way.
     el.continueBtn.hidden = false;
-    el.continueBtn.disabled = gridAnsweredCount(q) < q.rows.length;
+    el.continueBtn.disabled = gridAnsweredCount(q) < questionRows(q).length;
     return;
   }
   if (q.type === 'single') {
@@ -1294,7 +1357,7 @@ function updateContinueVisibility(q) {
     // A single-select whose picked option takes free text ("Someone else")
     // can't auto-advance — the click handler leaves Continue as the only way
     // forward once typing starts, same as the multi-select "Other" case.
-    const otherPicked = q.options && q.options.find((o) => o.hasOther && current === o.id);
+    const otherPicked = q.options && questionOptions(q).find((o) => o.hasOther && current === o.id);
     if (otherPicked) {
       el.continueBtn.hidden = false;
       el.continueBtn.disabled = !(state.answers[`${q.key}Other`] || '').trim();
@@ -1319,8 +1382,18 @@ function checkIcon() {
   return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
 }
 
+// A question can opt out based on earlier answers — the two follow-ups about
+// multiple relationship managers only exist for clients who named more than
+// one. Forward-only: Back walks the entries actually visited, and changing
+// the answer that hid a question is picked up by the next Continue.
+function isQuestionActive(q) {
+  return typeof q.showIf === 'function' ? q.showIf(state.answers) : true;
+}
+
 function advance() {
-  goToStep(state.stepIndex + 1);
+  let next = state.stepIndex + 1;
+  while (next < QUESTIONS.length && !isQuestionActive(QUESTIONS[next])) next++;
+  goToStep(next);
 }
 
 function goBack() {
