@@ -25,10 +25,10 @@ Google review and never shows an answer back to the client's RM.
 | 10 | Staying in touch | Desired contact frequency | Monthly / quarterly / half-yearly / yearly / as needed |
 | 11 | The app | iVentures Wealth app | 1–10, **skippable**, + suggestions box |
 | 12 | The big one | Recommend score | 0–10 slider + optional reason |
-| 12½ | One introduction | **Referrals** — shown only when the recommend score is 7+ | Name + number per person, via the phone's contact picker or typed |
-| 13 | Worth your evening? | Webinar interest | Wills & trusts, fund managers, children's financial literacy, passive income for children |
-| 14 | Staying in the loop | Email opt-in | Explicit, never pre-selected; no answer is recorded as "No answer" |
-| 15 | Looking ahead | New needs | Cross-sell signals, incl. a Will for every family member |
+| 13 | One introduction | **Referrals** | Name + number per person, via the phone's contact picker or typed |
+| 14 | Worth your evening? | Webinar interest | Wills & trusts, fund managers, children's financial literacy, passive income for children |
+| 15 | Staying in the loop | Email opt-in | Explicit, never pre-selected; no answer is recorded as "No answer" |
+| 16 | Looking ahead | New needs | Cross-sell signals, incl. a Will for every family member |
 | — | Last one | Feedback, suggestions or complaints | Optional open box, then Thank You |
 
 Every choice question carries a free-text "Other" option, and every rating
@@ -53,9 +53,9 @@ picker button simply never renders where the API is missing
 (`contactPickerSupported()` feature-detects rather than sniffing the user
 agent).
 
-The screen is skipped entirely for anyone scoring below 7 on the recommend
-question. Asking a client who has just scored you a 3 who else you can call
-turns a feedback form into a sales form, and they notice.
+It is asked of everyone, whatever they scored. The copy carries the weight
+instead of a filter — "entirely optional", and Continue is live the moment the
+screen opens, so a client with nothing to offer passes it in a single tap.
 
 ### The one required field
 

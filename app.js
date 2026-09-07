@@ -187,13 +187,11 @@ const QUESTIONS = [
     followUp: { key: 'npsNote', label: 'What’s the main reason for that score? (optional)', placeholder: 'Totally optional, but it helps us a lot…' },
   },
   {
-    // Only asked of someone who has just said they'd recommend us. Asking a
-    // detractor who they can introduce us to, seconds after they scored us a
-    // 3, reads as tone-deaf and is how a feedback form turns into a sales
-    // form. `showIf` skips the screen entirely rather than softening it.
+    // Asked of everyone, whatever they scored. The copy carries the weight
+    // instead of a filter: "entirely optional", and Continue is live from the
+    // moment the screen opens, so an unhappy client passes it in one tap.
     key: 'referrals', type: 'referrals', icon: ICONS.share,
     eyebrow: 'One introduction',
-    showIf: (a) => Number(a.nps) >= 7,
     title: () => (firstName()
       ? `${firstName()}, is there someone who should be having this conversation?`
       : 'Is there someone who should be having this conversation?'),
@@ -447,6 +445,13 @@ function renderQuestion(q) {
   el.choiceGrid.className = 'choice-grid' + (q.display === 'chips' ? ' chips' : '');
   el.otherInputWrap.hidden = true;
   el.secondaryInputWrap.hidden = true;
+  // #textInputLabel and #contactHint are single elements shared by every
+  // screen, and the contact question turns both of them on. Reset them here,
+  // with the other shared-element resets, or "Mobile number (required)" and a
+  // stale "that email looks off" hint follow the client through the rest of
+  // the form — which is exactly what they did.
+  el.textInputLabel.className = 'sr-only';
+  if (el.contactHint) el.contactHint.hidden = true;
   el.otherInput.value = state.answers[`${q.key}Other`] || '';
   el.otherInput.placeholder = q.otherPlaceholder || 'Tell us more…';
 
@@ -1202,18 +1207,8 @@ function checkIcon() {
   return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
 }
 
-// A question can opt out of being asked based on earlier answers. Kept as a
-// forward-only skip: Back walks the history entries actually visited, and if
-// someone goes back and changes the answer that hid a question, the next
-// Continue re-evaluates and picks it up.
-function isQuestionActive(q) {
-  return typeof q.showIf === 'function' ? q.showIf(state.answers) : true;
-}
-
 function advance() {
-  let next = state.stepIndex + 1;
-  while (next < QUESTIONS.length && !isQuestionActive(QUESTIONS[next])) next++;
-  goToStep(next);
+  goToStep(state.stepIndex + 1);
 }
 
 function goBack() {
