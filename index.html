@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!-- No maximum-scale / user-scalable=no: blocking pinch-zoom breaks WCAG 1.4.4
+     and this form is aimed at an older, HNI client base who may well want to
+     zoom in before answering. -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0F172A">
+<title>iVentures Client Feedback</title>
+<meta name="description" content="A private, two-minute check-in with iVentures Wealth — seen only by senior management.">
+<link rel="icon" href="assets/favicon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app" id="app">
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <img src="assets/apple-touch-icon.png" alt="" class="brand-mark">
+        <span id="brandText">iVentures <em>Wealth</em></span>
+      </div>
+      <div class="progress-track" id="progressTrack" role="progressbar"
+           aria-label="Progress through the form" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden>
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <span class="progress-label" id="progressLabel" hidden></span>
+    </div>
+  </header>
+
+  <main class="stage" id="stage">
+
+    <!-- SCREEN: Welcome -->
+    <section class="screen active" data-screen="welcome">
+      <div class="screen-inner welcome-inner">
+
+        <div class="hero-banner">
+          <div class="hero-banner-glow"></div>
+          <img src="assets/logo-white.png" alt="iVentures Wealth — Responsibly Yours." class="hero-logo">
+        </div>
+
+        <div class="welcome-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3.5v6c0 5-3.4 8.9-8 10.5-4.6-1.6-8-5.5-8-10.5v-6z"></path></svg>
+          <span id="welcomeBadgeText">2 minutes &middot; Seen only by senior management</span>
+        </div>
+        <h1 id="heroTitle">A Quick, Private<br><span class="accent">Check-In</span></h1>
+        <p class="subtitle" id="heroSubtitle">Nirmal and the leadership team read every response personally. Your relationship manager never sees your answers — so please be candid.</p>
+
+        <div class="stats-row" id="statsRow">
+          <div class="stat"><strong>20+</strong><span>Years</span></div>
+          <div class="stat"><strong>₹1200Cr+</strong><span>AUM</span></div>
+          <div class="stat"><strong>150+</strong><span>Investors</span></div>
+        </div>
+
+        <div class="trust-badge" id="trustBadge">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3.5v6c0 5-3.4 8.9-8 10.5-4.6-1.6-8-5.5-8-10.5v-6z"></path><path d="M9 12l2 2 4-4"></path></svg>
+          <span id="trustBadgeText">SEBI Registered &middot; Reg. No. INA000019026</span>
+        </div>
+
+        <button class="btn btn-primary btn-large" id="startBtn">
+          <span id="startBtnLabel">Let's Begin</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+        <p class="hint" id="heroHint">Six quick questions. Please answer honestly.</p>
+      </div>
+    </section>
+
+    <!-- SCREEN: single-select / multi-select / text / stars / slider template -->
+    <section class="screen" data-screen="question" id="questionScreen">
+      <div class="screen-inner">
+        <div class="q-icon" id="qIcon"></div>
+        <div class="q-eyebrow" id="qEyebrow">Question</div>
+        <h2 class="q-title" id="qTitle">Question title</h2>
+        <p class="q-sub" id="qSub"></p>
+
+        <!-- Optional secondary choice on the same screen as its parent question
+             (city with the name). Deliberately ABOVE the choice grid — see
+             app.js for why. -->
+        <div class="pill-row-wrap" id="pillRowWrap" hidden>
+          <p class="pill-row-label" id="pillRowLabel"></p>
+          <div class="pill-row" id="pillRow" role="group"></div>
+          <div class="pill-other-wrap" id="pillOtherWrap" hidden>
+            <label class="sr-only" for="pillOtherInput" id="pillOtherLabel">Tell us more</label>
+            <input type="text" class="text-input" id="pillOtherInput" maxlength="60">
+          </div>
+          <div class="pill-other-wrap" id="pillSubWrap" hidden>
+            <p class="pill-row-label" id="pillSubLabel">Where overseas?</p>
+            <div class="pill-row" id="pillSubRow" role="group"></div>
+            <div class="pill-other-wrap" id="pillSubOtherWrap" hidden>
+              <label class="sr-only" for="pillSubOtherInput">Which country?</label>
+              <input type="text" class="text-input" id="pillSubOtherInput" maxlength="60" placeholder="Which country?">
+            </div>
+          </div>
+        </div>
+
+        <div class="choice-grid" id="choiceGrid"></div>
+        <label class="sr-only" for="textInput" id="textInputLabel">Your answer</label>
+        <input type="text" class="text-input" id="textInput" maxlength="80" autocomplete="name" hidden>
+        <div class="other-input-wrap" id="otherInputWrap" hidden>
+          <label class="sr-only" for="otherInput">Tell us more</label>
+          <input type="text" class="text-input" id="otherInput" placeholder="Tell us more…" maxlength="120">
+        </div>
+
+        <div class="q-actions">
+          <button class="btn btn-ghost" id="backBtn" aria-label="Go back to the previous question"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>Back</button>
+          <button class="btn btn-primary" id="continueBtn" hidden>Continue</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN: notes -->
+    <section class="screen" data-screen="notes">
+      <div class="screen-inner">
+        <div class="q-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        </div>
+        <div class="q-eyebrow" id="notesEyebrow">Last one — and it's optional</div>
+        <h2 class="q-title" id="notesTitle">Anything else you'd like senior management to know?</h2>
+        <p class="q-sub" id="notesSub">Totally confidential — we read every line personally.</p>
+        <label class="sr-only" for="notesInput">Anything else you'd like senior management to know? (optional)</label>
+        <textarea id="notesInput" class="notes-textarea" placeholder="Write as much or as little as you like…" maxlength="1000"></textarea>
+
+        <div class="q-actions">
+          <button class="btn btn-ghost" id="notesBackBtn" aria-label="Go back to the previous question"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>Back</button>
+          <button class="btn btn-primary" id="generateBtn">
+            <span id="generateBtnLabel">Send Privately</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN: loading -->
+    <section class="screen" data-screen="loading">
+      <div class="screen-inner loading-inner">
+        <div class="loader-ring"></div>
+        <p class="loading-text" id="loadingText" role="status" aria-live="polite">Sending this straight to our team&hellip;</p>
+      </div>
+    </section>
+
+    <!-- SCREEN: thank you -->
+    <section class="screen" data-screen="thankyou">
+      <div class="screen-inner welcome-inner">
+        <div class="check-badge" id="checkBadge">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <h1 id="thankYouTitle">Thank You</h1>
+        <p class="subtitle" id="thankYouSubtitle">Your feedback has been recorded with our senior management team, in confidence. We're grateful you took the time.</p>
+        <button class="btn btn-secondary btn-large" id="restartBtn">Start Over</button>
+      </div>
+    </section>
+
+    <!-- SCREEN: error -->
+    <section class="screen" data-screen="error">
+      <div class="screen-inner welcome-inner">
+        <h1>Something Went Wrong</h1>
+        <p class="subtitle" id="errorText">Couldn't send your feedback. Please try again.</p>
+        <button class="btn btn-primary btn-large" id="retryBtn">Try Again</button>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <img src="assets/apple-touch-icon.png" alt="" class="footer-mark">
+    <span id="footerText">iVentures Wealth &middot; Responsibly Yours</span>
+  </footer>
+
+</div>
+
+<!-- role=status + aria-live for toast confirmations. -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- config.js must load first: app.js reads window.CONFIG at parse time. -->
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

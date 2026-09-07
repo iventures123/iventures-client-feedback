@@ -1,0 +1,9 @@
+{
+  "name": "iventures-client-feedback",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Private, six-question relationship check-in for iVentures Wealth's existing clients — seen only by senior management.",
+  "scripts": {
+    "dev": "vercel dev"
+  }
+}
