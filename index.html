@@ -8,14 +8,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0F172A">
 <title>iVentures Client Feedback</title>
-<meta name="description" content="A private, two-minute check-in with iVentures Wealth — seen only by senior management.">
+<meta name="description" content="A private check-in with iVentures Wealth — seen and used only by our team.">
+<!-- This link is sent to clients over WhatsApp and email, where the preview
+     card IS the first impression. Without these the message renders as a bare
+     vercel.app URL with no title, image or context — which reads like spam
+     from a firm asking for candid financial feedback. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="iVentures Wealth">
+<meta property="og:title" content="A Quick, Private Check-In">
+<meta property="og:description" content="Three minutes, seen and used only by our team. Your feedback helps us serve you better.">
+<meta property="og:image" content="https://iventures-client-feedback.vercel.app/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://iventures-client-feedback.vercel.app/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="A Quick, Private Check-In">
+<meta name="twitter:description" content="Three minutes, seen and used only by our team.">
+<meta name="twitter:image" content="https://iventures-client-feedback.vercel.app/assets/og-image.png">
 <link rel="icon" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<!-- The whole form is JavaScript. Without this, a client with JS blocked gets
+     a blank white page and no idea why. -->
+<noscript>
+  <div style="max-width:520px;margin:48px auto;padding:0 24px;font-family:system-ui,-apple-system,sans-serif;color:#0F172A;text-align:center">
+    <h1 style="font-size:1.4rem;margin:0 0 12px">JavaScript is switched off</h1>
+    <p style="color:#475569;line-height:1.6;margin:0">This short feedback form needs JavaScript to run. Please enable it in your browser and reload the page, or reply to the message you received and we will take your feedback directly.</p>
+  </div>
+</noscript>
 <div class="app" id="app">
 
   <header class="topbar">
@@ -45,10 +70,10 @@
 
         <div class="welcome-badge">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3.5v6c0 5-3.4 8.9-8 10.5-4.6-1.6-8-5.5-8-10.5v-6z"></path></svg>
-          <span id="welcomeBadgeText">2 minutes &middot; Seen only by senior management</span>
+          <span id="welcomeBadgeText">3 minutes &middot; Seen and used only by our team</span>
         </div>
         <h1 id="heroTitle">A Quick, Private<br><span class="accent">Check-In</span></h1>
-        <p class="subtitle" id="heroSubtitle">Nirmal and the leadership team read every response personally. Your relationship manager never sees your answers — so please be candid.</p>
+        <p class="subtitle" id="heroSubtitle">Nirmal and the team read every response personally. This is seen and used only by us — never shared with your relationship manager — so please be candid.</p>
 
         <div class="stats-row" id="statsRow">
           <div class="stat"><strong>20+</strong><span>Years</span></div>
@@ -65,7 +90,7 @@
           <span id="startBtnLabel">Let's Begin</span>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
         </button>
-        <p class="hint" id="heroHint">Six quick questions. Please answer honestly.</p>
+        <p class="hint" id="heroHint">A handful of quick questions — most are a single tap. Please answer honestly.</p>
       </div>
     </section>
 
@@ -100,6 +125,16 @@
         <div class="choice-grid" id="choiceGrid"></div>
         <label class="sr-only" for="textInput" id="textInputLabel">Your answer</label>
         <input type="text" class="text-input" id="textInput" maxlength="80" autocomplete="name" hidden>
+        <!-- Second field on the same screen as the primary text input — used
+             for the phone+email screen (email sits under phone). Hidden by
+             default so single-field text questions (name) don't show it. -->
+        <div class="secondary-input-wrap" id="secondaryInputWrap" hidden>
+          <label class="secondary-input-label" for="secondaryInput" id="secondaryInputLabel">Email</label>
+          <input type="text" class="text-input" id="secondaryInput" maxlength="100">
+          <!-- Advisory only, never blocking: these fields are optional, but a
+               typo'd email means our follow-up silently never arrives. -->
+          <p class="contact-hint" id="contactHint" role="status" aria-live="polite" hidden></p>
+        </div>
         <div class="other-input-wrap" id="otherInputWrap" hidden>
           <label class="sr-only" for="otherInput">Tell us more</label>
           <input type="text" class="text-input" id="otherInput" placeholder="Tell us more…" maxlength="120">
@@ -119,8 +154,8 @@
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
         </div>
         <div class="q-eyebrow" id="notesEyebrow">Last one — and it's optional</div>
-        <h2 class="q-title" id="notesTitle">Anything else you'd like senior management to know?</h2>
-        <p class="q-sub" id="notesSub">Totally confidential — we read every line personally.</p>
+        <h2 class="q-title" id="notesTitle">Anything else you'd like our team to know?</h2>
+        <p class="q-sub" id="notesSub">Totally confidential — seen and used only by our team. We read every line personally.</p>
         <label class="sr-only" for="notesInput">Anything else you'd like senior management to know? (optional)</label>
         <textarea id="notesInput" class="notes-textarea" placeholder="Write as much or as little as you like…" maxlength="1000"></textarea>
 
@@ -149,7 +184,7 @@
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
         </div>
         <h1 id="thankYouTitle">Thank You</h1>
-        <p class="subtitle" id="thankYouSubtitle">Your feedback has been recorded with our senior management team, in confidence. We're grateful you took the time.</p>
+        <p class="subtitle" id="thankYouSubtitle">Your feedback has been recorded with our team, in confidence, and will only be used internally to serve you better. We're grateful you took the time.</p>
         <button class="btn btn-secondary btn-large" id="restartBtn">Start Over</button>
       </div>
     </section>

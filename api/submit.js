@@ -39,6 +39,7 @@ function labelsById(list) {
 const LABELS = {
   city: labelsById(CONFIG.cities),
   rm: labelsById(CONFIG.team),
+  services: labelsById(CONFIG.services),
   newNeeds: labelsById(CONFIG.newNeeds),
 };
 const OVERSEAS_LABELS = labelsById(CONFIG.overseasCities);
@@ -77,16 +78,25 @@ function describeCity(answers) {
 // Sheets cells cap at 50,000 characters, and appendRow silently drops the
 // WHOLE ROW if one cell is oversized — so free text is clamped well below
 // that on arrival, generous enough that no genuine answer is ever touched.
-const TEXT_LIMITS = { name: 100, notes: 1200, other: 200 };
+const TEXT_LIMITS = { name: 100, phone: 30, email: 100, notes: 1200, other: 200, followUp: 400 };
+const FOLLOW_UP_KEYS = ['portfolioNote', 'serviceNote', 'rmNote', 'npsNote'];
 
 function clamp(value, max) {
   return String(value == null ? '' : value).slice(0, max);
 }
 
 function clampFreeText(answers, notes) {
-  const safe = { ...answers, name: clamp(answers.name, TEXT_LIMITS.name) };
+  const safe = {
+    ...answers,
+    name: clamp(answers.name, TEXT_LIMITS.name),
+    phone: clamp(answers.phone, TEXT_LIMITS.phone),
+    email: clamp(answers.email, TEXT_LIMITS.email),
+  };
   for (const key of Object.keys(safe)) {
     if (key.endsWith('Other')) safe[key] = clamp(safe[key], TEXT_LIMITS.other);
+  }
+  for (const key of FOLLOW_UP_KEYS) {
+    if (safe[key] != null) safe[key] = clamp(safe[key], TEXT_LIMITS.followUp);
   }
   return { answers: safe, notes: clamp(notes, TEXT_LIMITS.notes) };
 }
@@ -122,12 +132,25 @@ module.exports = async function handler(req, res) {
         hour: '2-digit', minute: '2-digit', hour12: true,
       }),
       name: String(answers.name || '').trim() || '(not given)',
+      phone: String(answers.phone || '').trim(),
+      email: String(answers.email || '').trim(),
       city: describeCity(answers),
       rm: describe('rm', answers.rm, answers.rmOther),
+      services: describe('services', answers.services, answers.servicesOther),
       portfolioRating: rating('portfolioRating'),
-      serviceRating: rating('serviceRating'),
+      portfolioNote: String(answers.portfolioNote || '').trim(),
+      // The service-quality sub-parts, one column each — sent as a flat map
+      // keyed by the same row keys config.js defines, so adding a row there
+      // needs no change here (only a new column header in Code.gs).
+      serviceQualities: CONFIG.serviceQualities.reduce((acc, row) => {
+        acc[row.key] = rating(row.key);
+        return acc;
+      }, {}),
+      serviceNote: String(answers.serviceNote || '').trim(),
       rmRating: rating('rmRating'),
+      rmNote: String(answers.rmNote || '').trim(),
       nps,
+      npsNote: String(answers.npsNote || '').trim(),
       newNeeds: describe('newNeeds', answers.newNeeds, answers.newNeedsOther),
       notes,
     });

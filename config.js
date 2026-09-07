@@ -26,17 +26,17 @@
 
     trustLine: 'SEBI Registered · Reg. No. INA000019026',
 
-    thankYouSubtitle: 'Your feedback has been recorded with our senior management team, in confidence. We’re grateful you took the time.',
+    thankYouSubtitle: 'This has been recorded with our team, in confidence. We will use it to improve how we look after you — and if you have flagged something that needs attention, we will follow up with you personally.',
 
     // --- Welcome screen copy ---------------------------------------------
     hero: {
-      badge: '2 minutes · Seen only by senior management',
+      badge: '3 minutes · Seen and used only by our team',
       titlePrefix: 'A Quick, Private',
       titleAccent: 'Check-In',
       titleSuffix: '',
-      subtitle: 'Nirmal and the leadership team read every response personally. Your relationship manager never sees your answers — so please be candid.',
+      subtitle: 'Nirmal and the team read every response personally — and act on it. This is seen and used only by us, never shared with your relationship manager, so please be candid.',
       ctaLabel: "Let's Begin",
-      hint: 'Six quick questions. Please answer honestly.',
+      hint: 'A handful of quick questions — most are a single tap. Please answer honestly.',
     },
 
     stats: [
@@ -78,6 +78,44 @@
       { id: 'canada', label: 'Canada' },
       { id: 'other', label: 'Other', hasOther: true, placeholder: 'Which country?' },
     ],
+
+    // --- Service quality, rated part by part ---------------------------------
+    // One screen, several sub-parts — a single "how's our service?" star can't
+    // tell you WHICH part is failing, and that's the whole point of asking.
+    // Each row is one tap on a 1-5 scale. Keep this list short: every row
+    // added is another tap for every client, and a battery long enough to feel
+    // like homework is where people start tapping 4s down the column without
+    // reading.
+    serviceQualities: [
+      { key: 'qCommunication', label: 'Communication', sub: 'How clearly things get explained to you' },
+      { key: 'qResponsiveness', label: 'Responsiveness', sub: 'How quickly we get back to you' },
+      { key: 'qFollowUps', label: 'Follow-ups', sub: 'Whether we circle back when we say we will' },
+      { key: 'qReporting', label: 'Reporting & presentation', sub: 'How clear your statements and reviews are' },
+      { key: 'qProactivity', label: 'Proactivity', sub: 'Bringing you ideas before you have to ask' },
+      { key: 'qUnderstanding', label: 'Understanding your goals', sub: 'How well we know what you actually want' },
+    ],
+
+    // --- Services currently in use -------------------------------------------
+    // What the client is ALREADY using, as opposed to `newNeeds` below (what
+    // they might want next). Plain service names, same roster as the public
+    // review form's `services` list — kept as bare labels here since nothing
+    // on this form assembles them into review-text sentences.
+    services: [
+      { id: 'portfolio-management', label: 'Portfolio Management (PMS & AIF)' },
+      { id: 'global-etfs-hedge-funds', label: 'Global ETFs & Hedge Funds' },
+      { id: 'stocks-etfs', label: 'Stocks & ETFs' },
+      { id: 'mutual-funds', label: 'Mutual Fund Investments' },
+      { id: 'asset-consolidation', label: 'Consolidation & Tracking of Financial Assets' },
+      { id: 'estate-succession', label: 'Estate & Succession Planning' },
+      { id: 'will-trusts', label: 'Will Drafting & Family Trusts' },
+      { id: 'tax-planning', label: 'Taxation Advisory' },
+      { id: 'nri-advisory', label: 'NRI Investment Advisory' },
+      { id: 'global-investing', label: 'Global Investing (GIFT City)' },
+      { id: 'real-estate', label: 'Real Estate Advisory' },
+      { id: 'family-office', label: 'Family Office Advisory' },
+      { id: 'other', label: 'Something else', hasOther: true },
+    ],
+    servicesOtherPlaceholder: 'What else are you working with us on?',
 
     // --- New needs / cross-sell signals --------------------------------------
     // Multi-select. No "Nothing right now, I'm all set" exclusivity logic —

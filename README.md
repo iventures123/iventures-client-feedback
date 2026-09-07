@@ -1,25 +1,45 @@
 # iVentures Client Feedback
 
-A private, ~2-minute check-in for iVentures Wealth's existing clients — six
-tap-through questions plus one open text box, logged straight to a Google
-Sheet that only senior management sees. No AI, no framework, no build step.
+A private, ~3-minute check-in for iVentures Wealth's existing clients — nine
+mostly-one-tap questions plus an open text box, logged straight to a Google
+Sheet that only the management team sees. No AI, no framework, no build step.
 
 Forked from [`google-reviews-form`](https://github.com/varun4447777/google-reviews-form)'s
 `iventures-live` (the public "Share Your Experience" review funnel) — same
 mobile-first tap-through mechanics, but this one never asks for a public
 Google review and never shows an answer back to the client's RM.
 
-Flow: Welcome → Name (+ city) → Which RM → Portfolio/performance rating →
-Service rating → "How has [RM] been for you personally" rating → Recommend
-score (0–10) → New needs (multi-select) → Optional open note → Thank you.
+## The flow
+
+| # | Screen | Captures |
+|---|---|---|
+| 1 | Name (+ city) | Who's answering, and where they're based |
+| 2 | Which RM | Who the feedback is about |
+| 3 | Services currently using | The shape of the existing relationship |
+| 4 | Portfolio & performance | 1–5 + optional note |
+| 5 | **How are we doing on each of these?** | Six sub-parts, 1–5 each: communication, responsiveness, follow-ups, reporting & presentation, proactivity, understanding goals — plus an optional note |
+| 6 | "How has [RM] been for you personally" | 1–5 + optional note, RM's name filled in live |
+| 7 | Recommend score | 0–10 slider + optional reason |
+| 8 | New needs | Multi-select cross-sell signals |
+| 9 | Phone + email | Optional, for follow-up |
+| — | Anything else | Optional open note, then Thank You |
+
+Every choice question carries a free-text "Other" option, and every rating
+question has an optional comment box, so a client is never forced to squeeze
+their answer into a preset.
 
 ## Why this exists
 
 The RM-specific question and its own thank-you copy exist so a client can be
 honest about their *individual* relationship manager without worrying the RM
 will ever read it — that promise is stated on the welcome screen and repeated
-right before the RM rating. The Sheet this logs to should only ever be shared
-with senior management, never with RMs, or that promise breaks.
+right before the RM rating. **The Sheet this logs to should only ever be shared
+with the management team, never with RMs, or that promise breaks.**
+
+Question 5 is the one that earns its keep on a call: a single "rate our
+service" star tells you a client is unhappy but never which part to fix.
+Six sub-parts on one screen tell you it's follow-ups, not communication —
+which is a conversation you can actually have with an RM.
 
 ## How it works
 
@@ -95,9 +115,18 @@ prefer it.
 ## Editing content later
 
 - **RM / relationship manager list**: `team` in `config.js`.
+- **Services currently using**: `services` in `config.js`.
+- **Service-quality sub-parts** (question 5): `serviceQualities` in `config.js`.
+  Adding a row there also needs its key + column header added to
+  `QUALITY_COLUMNS` in `apps-script/Code.gs`, and a redeploy of the script —
+  nothing else changes.
 - **Cities**: `cities` / `overseasCities` in `config.js`.
 - **"New needs" options**: `newNeeds` in `config.js`.
-- **Question wording**: `QUESTIONS` array in `app.js`.
+- **Question wording and order**: `QUESTIONS` array in `app.js`.
+- **Link preview card** (WhatsApp/email): `assets/og-image.png` plus the
+  `og:` meta tags in `index.html`. The `og:image` and `og:url` tags are
+  absolute URLs — if the deployment URL ever changes, update them or the
+  preview breaks.
 
 No admin panel by design — these are one-line edits, and editing code directly
 means there's no separate settings store to keep in sync across devices.
