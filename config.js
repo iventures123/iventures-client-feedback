@@ -31,9 +31,9 @@
     // --- Welcome screen copy ---------------------------------------------
     hero: {
       badge: '3 minutes · Seen and used only by our team',
-      titlePrefix: 'A Quick, Private',
-      titleAccent: 'Check-In',
-      titleSuffix: '',
+      titlePrefix: 'iVentures Private',
+      titleAccent: 'Team Assessment',
+      titleSuffix: 'Survey',
       subtitle: 'So we can put the right team, the right skills and the right knowledge behind you and your family. Read personally by Nirmal and the team, never shared with your relationship manager — so please be candid.',
       ctaLabel: "Let's Begin",
       hint: 'A handful of quick questions — most are a single tap. Please answer honestly.',
@@ -91,6 +91,7 @@
       { key: 'qResponsiveness', label: 'Responsiveness', sub: 'Response time — do they call back, do they reply to messages' },
       { key: 'qFollowUps', label: 'Follow-through', sub: 'Whether they circle back when they say they will' },
       { key: 'qUnderstanding', label: 'Understanding your goals', sub: 'How well they know what you are actually trying to achieve' },
+      { key: 'qNewIdeas', label: 'Explaining new products', sub: 'Walking you through AIF, PMS, fixed income and newer ideas' },
       { key: 'qProactivity', label: 'Proactivity', sub: 'Bringing you ideas before you have to ask for them' },
       { key: 'qReporting', label: 'Reporting & reviews', sub: 'How clear your statements and portfolio reviews are' },
     ],
@@ -106,10 +107,46 @@
       { id: 'fixed-income', label: 'Fixed income', sub: 'Bonds, debt, structured yield' },
       { id: 'venture', label: 'Startup & venture funds', sub: 'Private markets and venture capital' },
       { id: 'global-etfs', label: 'Global ETFs beyond India', sub: 'US, UK, Japan, South Korea, China' },
+      { id: 'portfolio-review', label: 'A review of my existing portfolio', sub: 'Going through what you already hold' },
       { id: 'none', label: 'None of these, so far' },
       { id: 'other', label: 'Other product baskets', hasOther: true },
     ],
     rmCoverageOtherPlaceholder: 'Which other baskets have they walked you through?',
+
+    // --- App experience -------------------------------------------------------
+    // A word per band, so the number means the same thing to every client.
+    // "6/10" on its own is whatever the person happens to think 6 means.
+    appRatingWords: {
+      1: 'Frustrating', 2: 'Frustrating',
+      3: 'Needs real work', 4: 'Needs real work',
+      5: 'Usable, but clunky', 6: 'Usable, but clunky',
+      7: 'Good', 8: 'Good',
+      9: 'Excellent', 10: 'Excellent',
+    },
+
+    // Shown only when the score is 7 or below. "The app is a 4" is not a bug
+    // report; "the numbers look out of date" is one an engineer can act on.
+    appIssues: [
+      { id: 'ui-ux', label: 'Design & ease of use' },
+      { id: 'hard-to-find', label: 'Hard to find what I need' },
+      { id: 'slow', label: 'Slow or unresponsive' },
+      { id: 'login', label: 'Login or access trouble' },
+      { id: 'data-wrong', label: 'Numbers look wrong or out of date' },
+      { id: 'missing-info', label: 'Missing information I want' },
+      { id: 'crashes', label: 'Crashes or errors' },
+      { id: 'notifications', label: 'Too many or too few alerts' },
+    ],
+
+    // --- Referrals ------------------------------------------------------------
+    // How they know the person. Changes the first line of the call, which is
+    // the whole reason to ask.
+    referralRelations: [
+      { id: 'family', label: 'Family' },
+      { id: 'friend', label: 'Friend' },
+      { id: 'colleague', label: 'Colleague' },
+      { id: 'business', label: 'Business associate' },
+      { id: 'other', label: 'Someone else' },
+    ],
 
     // --- Webinar / event interest --------------------------------------------
     // Doubles as an invitation list: whatever gets ticked here is a client who
@@ -174,6 +211,10 @@
       { id: 'global-investing', label: 'Global Investing (GIFT City)' },
       { id: 'real-estate', label: 'Real Estate Advisory' },
       { id: 'family-office', label: 'Family Office Advisory' },
+      { id: 'ipo', label: 'IPO investments' },
+      { id: 'pre-ipo', label: 'Pre-IPO & unlisted shares' },
+      { id: 'investment-banking', label: 'Investment banking' },
+      { id: 'debt-syndication', label: 'Debt syndication' },
       { id: 'other', label: 'Something else', hasOther: true },
     ],
     servicesOtherPlaceholder: 'What else are you working with us on?',

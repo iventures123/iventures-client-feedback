@@ -1,6 +1,6 @@
 # iVentures Client Feedback
 
-A private check-in for iVentures Wealth's existing clients — sixteen
+A private check-in for iVentures Wealth's existing clients — fifteen
 mostly-one-tap questions plus an open text box, logged straight to a Google
 Sheet that only the management team sees. No AI, no framework, no build step.
 
@@ -14,21 +14,20 @@ Google review and never shows an answer back to the client's RM.
 | # | Eyebrow | Screen | Captures |
 |---|---|---|---|
 | 1 | First things first | Name (+ city) | Who's answering, and where they're based |
-| 2 | So we can reach you | **Mobile (required) + email (optional)** | The number to call them back on |
+| 2 | So we can reach you | **Mobile + email, both required** | How to call and write to them |
 | 3 | Your relationship | Which wealth RM | Who the feedback is about |
-| 4 | What we look after | Services currently using | The shape of the existing relationship |
+| 4 | What we look after | Services currently using | Incl. IPO, pre-IPO, investment banking, debt syndication |
 | 5 | Your portfolio | Performance **and asset allocation mix** | 1–5 + optional note |
 | 6 | Paperwork | Tax reports & statements on time | Always / only when chased / late / a problem |
-| 7 | The day to day | **How is [RM] doing on each of these?** | Six skillsets, 1–5 each: market knowledge, responsiveness, follow-through, understanding goals, proactivity, reporting |
-| 8 | Beyond the basics | **What has [RM] walked you through?** | MF, PMS, AIF, fixed income, startup & venture funds, global ETFs beyond India |
+| 7 | The day to day | **How is [RM] doing on each of these?** | Seven skillsets, 1–5 each: market knowledge, responsiveness, follow-through, understanding goals, **explaining new products (AIF, PMS, fixed income)**, proactivity, reporting |
+| 8 | Beyond the basics | **What has [RM] walked you through?** | MF, PMS, AIF, fixed income, venture funds, global ETFs, **a review of existing holdings** |
 | 9 | Just between us | Overall verdict on [RM] | 1–5 across everything above, + optional note |
 | 10 | Staying in touch | Desired contact frequency | Monthly / quarterly / half-yearly / yearly / as needed |
-| 11 | The app | iVentures Wealth app | 1–10, **skippable**, + suggestions box |
-| 12 | The big one | Recommend score | 0–10 slider + optional reason |
-| 13 | One introduction | **Referrals** | Name + number per person, via the phone's contact picker or typed |
-| 14 | Worth your evening? | Webinar interest | Wills & trusts, fund managers, children's financial literacy, passive income for children |
-| 15 | Staying in the loop | Email opt-in | Explicit, never pre-selected; no answer is recorded as "No answer" |
-| 16 | Looking ahead | New needs | Cross-sell signals, incl. a Will for every family member |
+| 11 | The app | iVentures Wealth app | 1–10 with a word per band, **skippable**; a low score reveals an issue picker (UI, speed, login, stale data…) |
+| 12 | The big one | Recommend score **+ referrals** | 0–10, then name / number / relationship per person, via the phone's contact picker or typed |
+| 13 | Invitation only | Webinar interest | Curated private-client sessions; confirms updates come by email and WhatsApp |
+| 14 | Staying in the loop | Email opt-in | Explicit, never pre-selected |
+| 15 | Looking ahead | New needs | Cross-sell signals, incl. a Will for every family member |
 | — | Last one | Feedback, suggestions or complaints | Optional open box, then Thank You |
 
 Every choice question carries a free-text "Other" option, and every rating
@@ -57,13 +56,15 @@ It is asked of everyone, whatever they scored. The copy carries the weight
 instead of a filter — "entirely optional", and Continue is live the moment the
 screen opens, so a client with nothing to offer passes it in a single tap.
 
-### The one required field
+### The required fields
 
-The mobile number on screen 2 is the only thing the form insists on, because
-it is what turns a written complaint into a phone call. It's validated as
+Screen 2 is the only screen the form insists on: a mobile number, because it
+is what turns a written complaint into a phone call, and an email address
+alongside it. It's validated as
 7–15 digits — a plausibility check, not an Indian-format check, so an NRI
-client's `+971…` number passes. Everything else, email included, is optional,
-and a questionable email produces an advisory line rather than a block.
+client's `+971…` number passes. The email is checked loosely — an "@", a dot, something either
+side — since a pattern strict enough to reject an unusual-but-valid address
+does more harm than a typo, which bounces and gets noticed anyway.
 
 Asking for it that early is a deliberate trade: a contact field before
 anything interesting costs some completions, but a client who abandons

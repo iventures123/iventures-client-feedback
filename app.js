@@ -77,8 +77,12 @@ const QUESTIONS = [
       return digits.length >= 7 && digits.length <= 15;
     },
     secondary: {
-      key: 'email', label: 'Email (optional)', placeholder: 'e.g. vikram@email.com',
+      key: 'email', label: 'Email (required)', placeholder: 'e.g. vikram@email.com',
       inputType: 'email', autocomplete: 'email', inputMode: 'email',
+      // Loose on purpose: an "@", a dot, something either side. A strict
+      // pattern that rejects a valid unusual address is worse than one that
+      // lets a typo through — a typo still bounces and gets noticed.
+      validate: (value) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(value || '').trim()),
     },
   },
   {
@@ -176,6 +180,12 @@ const QUESTIONS = [
     sub: 'Drag to rate, and tell us anything that would make it better. Never used it? Just skip ahead.',
     optional: true,
     sliderMin: 1, sliderMax: 10, sliderLowLabel: 'Needs work', sliderHighLabel: 'Excellent',
+    sliderWords: CONFIG.appRatingWords,
+    issues: {
+      key: 'appIssues', threshold: 7,
+      label: 'What is getting in the way? (tap any that apply)',
+      options: CONFIG.appIssues,
+    },
     followUp: { key: 'appNote', label: 'Any feedback or suggestions to improve it? (optional)', placeholder: 'e.g. what you wish it showed, what is hard to find\u2026' },
   },
   {
@@ -185,24 +195,19 @@ const QUESTIONS = [
     sub: 'Drag to a number from 0 (not likely) to 10 (extremely likely).',
     sliderMin: 0, sliderMax: 10, sliderLowLabel: 'Not likely', sliderHighLabel: 'Extremely likely',
     followUp: { key: 'npsNote', label: 'What’s the main reason for that score? (optional)', placeholder: 'Totally optional, but it helps us a lot…' },
-  },
-  {
-    // Asked of everyone, whatever they scored. The copy carries the weight
-    // instead of a filter: "entirely optional", and Continue is live from the
-    // moment the screen opens, so an unhappy client passes it in one tap.
-    key: 'referrals', type: 'referrals', icon: ICONS.share,
-    eyebrow: 'One introduction',
-    title: () => (firstName()
-      ? `${firstName()}, is there someone who should be having this conversation?`
-      : 'Is there someone who should be having this conversation?'),
-    sub: 'Entirely optional. Pick them from your contacts or type the details — we will mention your name when we reach out, and nothing goes to them until we do.',
-    optional: true,
+    // The score and the introduction share a screen on purpose: the moment
+    // someone has just weighed up whether they'd recommend us is the one
+    // point in the form where "who would you introduce?" follows naturally.
+    referralsKey: 'referrals',
   },
   {
     key: 'webinars', type: 'multi', icon: ICONS.calendar,
-    eyebrow: 'Worth your evening?',
-    title: 'Which of these would you actually attend?',
-    sub: 'Small, invitation-only sessions. Tick anything you would want an invite to.',
+    eyebrow: 'Invitation only',
+    title: 'Which of these sessions would you actually attend?',
+    sub: 'Online sessions we curate for private clients only — a small room, a selective few, and room to ask your own questions. Tick anything you would want an invite to.',
+    // Shown once they tick something: an invitation list is only worth
+    // joining if you know how the invitation is going to reach you.
+    pickedNote: 'Noted — we will keep you posted on dates over email and WhatsApp.',
     display: 'chips',
     otherPlaceholder: CONFIG.webinarOtherPlaceholder,
     exclusiveOption: 'none',
@@ -515,6 +520,7 @@ function renderQuestion(q) {
       el.secondaryInput.oninput = () => {
         state.answers[q.secondary.key] = el.secondaryInput.value;
         updateContactHint(q);
+        updateContinueVisibility(q);
       };
       updateContactHint(q);
       el.secondaryInput.onkeydown = (event) => {
@@ -537,11 +543,6 @@ function renderQuestion(q) {
 
   if (q.type === 'slider') {
     renderSlider(q);
-    return;
-  }
-
-  if (q.type === 'referrals') {
-    renderReferrals(q);
     return;
   }
 
@@ -622,6 +623,7 @@ function renderQuestion(q) {
   // until something is picked — a comment box above an untouched list of
   // chips just reads as more work.
   renderFollowUp(q, el.choiceGrid, hasSelection(q));
+  renderPickedNote(q, el.choiceGrid, hasSelection(q));
 
   syncOtherInput(q);
   updateContinueVisibility(q);
@@ -638,9 +640,30 @@ function hasSelection(q) {
 // choice grid repaints buttons in place rather than re-rendering, so nothing
 // else would ever unhide it.
 function toggleFollowUp(q) {
-  if (!q.followUp) return;
-  const wrap = el.choiceGrid.querySelector('.rating-followup');
-  if (wrap) wrap.hidden = !hasSelection(q);
+  const answered = hasSelection(q);
+  if (q.followUp) {
+    const wrap = el.choiceGrid.querySelector('.rating-followup');
+    if (wrap) wrap.hidden = !answered;
+  }
+  if (q.pickedNote) {
+    const note = el.choiceGrid.querySelector('.picked-note');
+    if (note) note.hidden = !answered;
+  }
+}
+
+// A plain confirmation line under a choice question — what happens next, once
+// they've actually chosen something.
+function renderPickedNote(q, container, show) {
+  if (!q.pickedNote) return null;
+  const note = document.createElement('p');
+  note.className = 'picked-note';
+  note.hidden = !show;
+  note.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  const span = document.createElement('span');
+  span.textContent = q.pickedNote;
+  note.appendChild(span);
+  container.appendChild(note);
+  return note;
 }
 
 // Advisory only — these fields are optional and this never blocks Continue.
@@ -656,21 +679,23 @@ function updateContactHint(q) {
   // Only complain about a number once they've started typing one — an empty
   // field on arrival isn't a mistake, and the "(required)" label already says
   // what's needed.
-  const phoneBad = !!phone && !isTextAnswerValid(q);
-  const emailBad = !!email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+  // Each field is judged by its OWN rule. isTextAnswerValid() answers "can
+  // this screen advance", which now folds in both — using it here would blame
+  // the number for a bad email address.
+  const phoneBad = !!phone && q.validate && !q.validate(phone);
+  const emailBad = !!email && q.secondary.validate && !q.secondary.validate(email);
 
   if (!phoneBad && !emailBad) { el.contactHint.hidden = true; return; }
   el.contactHint.hidden = false;
 
-  // The number blocks Continue and the email doesn't, so the two cases can't
-  // share a closing line — telling someone they "can still continue" while
-  // the button sits disabled is worse than saying nothing.
+  // Both fields block Continue now, so neither message may promise the client
+  // can carry on regardless.
   if (phoneBad && emailBad) {
-    el.contactHint.textContent = 'That number looks incomplete — please check it. The email address looks off too.';
+    el.contactHint.textContent = 'That number and that email address both look incomplete — please check them.';
   } else if (phoneBad) {
     el.contactHint.textContent = 'That number looks incomplete — please check it so we can reach you.';
   } else {
-    el.contactHint.textContent = 'Just checking — that email address looks off. You can still continue.';
+    el.contactHint.textContent = 'That email address does not look right — please check it.';
   }
 }
 
@@ -914,6 +939,17 @@ function renderSlider(q) {
   valueDisplay.setAttribute('aria-live', 'polite');
   valueDisplay.textContent = hasAnswer ? `${current} / ${max}` : 'Drag to rate';
 
+  // A word for every point on the scale. "Needs work" and "Excellent" at the
+  // two ends leave everything between them to interpretation, so a 6 means
+  // whatever the person happens to think 6 means.
+  const words = q.sliderWords || null;
+  const captionFor = (v) => (words && words[v]) || '';
+  const caption = document.createElement('p');
+  caption.className = 'slider-caption';
+  caption.setAttribute('aria-live', 'polite');
+  caption.textContent = hasAnswer ? captionFor(current) : '';
+  caption.hidden = !(words && hasAnswer);
+
   const input = document.createElement('input');
   input.type = 'range';
   input.className = 'slider-input';
@@ -940,6 +976,7 @@ function renderSlider(q) {
     const value = Number(input.value);
     state.answers[q.key] = value;
     valueDisplay.textContent = `${value} / ${max}`;
+    if (words) { caption.textContent = captionFor(value); caption.hidden = false; }
     valueDisplay.setAttribute('aria-live', 'off');
     input.classList.remove('slider-untouched');
     input.setAttribute('aria-valuetext', `${value} out of ${max}`);
@@ -948,15 +985,64 @@ function renderSlider(q) {
   });
   input.addEventListener('change', () => valueDisplay.setAttribute('aria-live', 'polite'));
 
-  wrap.append(valueDisplay, input, labels);
+  wrap.append(valueDisplay, caption, input, labels);
   el.choiceGrid.appendChild(wrap);
+
+  // Issue picker for a low score. "The app is a 4" is nothing an engineer can
+  // act on; "hard to find what I need" is. Cleared if the client drags back
+  // up, so a 9/10 never arrives with a complaint still attached to it.
+  let issuesWrap = null;
+  if (q.issues) {
+    issuesWrap = document.createElement('div');
+    issuesWrap.className = 'app-issues';
+    const issuesLabel = document.createElement('p');
+    issuesLabel.className = 'rating-followup-label';
+    issuesLabel.textContent = q.issues.label;
+    const row = document.createElement('div');
+    row.className = 'pill-row issue-row';
+    q.issues.options.forEach((opt) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      const picked = () => (Array.isArray(state.answers[q.issues.key]) ? state.answers[q.issues.key] : []).includes(opt.id);
+      b.className = 'pill' + (picked() ? ' selected' : '');
+      b.setAttribute('aria-pressed', String(picked()));
+      b.textContent = opt.label;
+      b.addEventListener('click', () => {
+        buzz();
+        const set = new Set(Array.isArray(state.answers[q.issues.key]) ? state.answers[q.issues.key] : []);
+        if (set.has(opt.id)) set.delete(opt.id); else set.add(opt.id);
+        state.answers[q.issues.key] = Array.from(set);
+        b.classList.toggle('selected', set.has(opt.id));
+        b.setAttribute('aria-pressed', String(set.has(opt.id)));
+      });
+      row.appendChild(b);
+    });
+    issuesWrap.append(issuesLabel, row);
+    issuesWrap.hidden = !(hasAnswer && Number(current) <= q.issues.threshold);
+    el.choiceGrid.appendChild(issuesWrap);
+  }
   // Unlike stars (which fully re-render on every tap), dragging the slider
   // updates the DOM in place via the 'input' listener below — so the
   // follow-up box, once built, needs to unhide itself there rather than
   // waiting for a re-render that never comes.
   const followUpWrap = renderFollowUp(q, el.choiceGrid, hasAnswer);
 
-  input.addEventListener('input', () => { if (followUpWrap) followUpWrap.hidden = false; });
+  input.addEventListener('input', () => {
+    if (followUpWrap) followUpWrap.hidden = false;
+    if (issuesWrap) {
+      const show = Number(input.value) <= q.issues.threshold;
+      issuesWrap.hidden = !show;
+      if (!show) state.answers[q.issues.key] = [];
+    }
+  });
+
+  // The introduction sits on this screen too, in its own container, so adding
+  // or removing someone repaints only itself and leaves the slider alone.
+  if (q.referralsKey) {
+    const refWrap = document.createElement('div');
+    el.choiceGrid.appendChild(refWrap);
+    renderReferralBlock(q, refWrap);
+  }
 
   el.continueBtn.hidden = false;
   // 0 is a valid, meaningful NPS answer, so gate on "has it been touched",
@@ -972,8 +1058,14 @@ function renderSlider(q) {
 function isTextAnswerValid(q) {
   if (q.optional) return true;
   const value = state.answers[q.key] || '';
-  if (q.validate) return q.validate(value);
-  return !!value.trim();
+  const primaryOk = q.validate ? q.validate(value) : !!value.trim();
+  if (!primaryOk) return false;
+  // A second field on the same screen gates Continue too when it carries its
+  // own check — the contact screen needs both a number and an address.
+  if (q.secondary && q.secondary.validate) {
+    return q.secondary.validate(state.answers[q.secondary.key] || '');
+  }
+  return true;
 }
 
 // ---------------------------------------------------------------------------
@@ -997,13 +1089,14 @@ function contactPickerSupported() {
 }
 
 function referralList(q) {
-  return Array.isArray(state.answers[q.key]) ? state.answers[q.key] : [];
+  const list = state.answers[q.referralsKey];
+  return Array.isArray(list) ? list : [];
 }
 
 // The picker is entirely user-mediated: the browser draws it, and the page
 // receives only the people tapped. We never read, and could never read, the
 // address book itself.
-async function pickFromContacts(q) {
+async function pickFromContacts(q, wrap) {
   let picked;
   try {
     picked = await navigator.contacts.select(['name', 'tel'], { multiple: true });
@@ -1024,27 +1117,36 @@ async function pickFromContacts(q) {
     const dupe = list.some((r) => r.phone.replace(/\D/g, '') === phone.replace(/\D/g, '') && phone);
     if (!dupe) list.push({ name, phone });
   });
-  state.answers[q.key] = list.slice(0, MAX_REFERRALS);
+  state.answers[q.referralsKey] = list.slice(0, MAX_REFERRALS);
   buzz();
-  renderReferrals(q);
+  renderReferralBlock(q, wrap);
 }
 
-function renderReferrals(q) {
-  el.choiceGrid.hidden = false;
-  el.textInput.hidden = true;
-  el.choiceGrid.className = 'choice-grid referral-grid';
-  el.choiceGrid.innerHTML = '';
+function renderReferralBlock(q, wrap) {
+  const key = q.referralsKey;
+  wrap.innerHTML = '';
+  wrap.className = 'referral-wrap';
+
+  const heading = document.createElement('p');
+  heading.className = 'referral-heading';
+  heading.textContent = firstName()
+    ? `${firstName()}, is there someone in your inner circle whose finances we could look after?`
+    : 'Is there someone in your inner circle whose finances we could look after?';
+  wrap.appendChild(heading);
+
+  const blurb = document.createElement('p');
+  blurb.className = 'referral-privacy';
+  blurb.textContent = 'Entirely optional. Leave a name and number and we will introduce ourselves properly, mentioning you — nothing reaches them before that.';
+  wrap.appendChild(blurb);
 
   const list = referralList(q);
-  const wrap = document.createElement('div');
-  wrap.className = 'referral-wrap';
 
   if (contactPickerSupported() && list.length < MAX_REFERRALS) {
     const pick = document.createElement('button');
     pick.type = 'button';
     pick.className = 'btn btn-secondary referral-pick';
     pick.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg><span>Choose from my contacts</span>';
-    pick.addEventListener('click', () => pickFromContacts(q));
+    pick.addEventListener('click', () => pickFromContacts(q, wrap));
     wrap.appendChild(pick);
 
     const hint = document.createElement('p');
@@ -1072,6 +1174,22 @@ function renderReferrals(q) {
     telIn.placeholder = 'Their number'; telIn.maxLength = 30; telIn.inputMode = 'tel';
     telIn.setAttribute('aria-label', 'Their phone number');
 
+    // A native <select> rather than another chip row: one tap on a phone,
+    // keyboard and screen-reader support for free, and it can't be mistaken
+    // for one of the form's own multi-selects.
+    const relIn = document.createElement('select');
+    relIn.className = 'text-input referral-input referral-relation';
+    relIn.setAttribute('aria-label', 'How you know them');
+    const ph = document.createElement('option');
+    ph.value = ''; ph.textContent = 'How you know them';
+    ph.disabled = true; ph.selected = true;
+    relIn.appendChild(ph);
+    CONFIG.referralRelations.forEach((r) => {
+      const o = document.createElement('option');
+      o.value = r.id; o.textContent = r.label;
+      relIn.appendChild(o);
+    });
+
     const add = document.createElement('button');
     add.type = 'button'; add.className = 'btn btn-secondary referral-add';
     add.textContent = 'Add';
@@ -1087,22 +1205,26 @@ function renderReferrals(q) {
 
     const commit = () => {
       if (!valid()) return;
-      state.answers[q.key] = referralList(q).concat([{
+      const rel = CONFIG.referralRelations.find((r) => r.id === relIn.value);
+      state.answers[key] = referralList(q).concat([{
         name: nameIn.value.trim().slice(0, 100),
         phone: telIn.value.trim().slice(0, 30),
+        // Not gated on: someone who fills in a name and number and ignores
+        // the dropdown should still be able to add them.
+        relation: rel ? rel.label : '',
       }]).slice(0, MAX_REFERRALS);
       buzz();
-      renderReferrals(q);
+      renderReferralBlock(q, wrap);
       // Straight back to the name field: someone adding one person often has
       // a second in mind, and hunting for the box again is where they stop.
-      const next = el.choiceGrid.querySelector('.referral-input');
+      const next = wrap.querySelector('.referral-input');
       if (next) next.focus();
     };
     add.addEventListener('click', commit);
     telIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); commit(); } });
     nameIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); telIn.focus(); } });
 
-    form.append(nameIn, telIn, add);
+    form.append(nameIn, telIn, relIn, add);
     wrap.appendChild(form);
   }
 
@@ -1118,9 +1240,9 @@ function renderReferrals(q) {
       text.className = 'referral-item-text';
       const nm = document.createElement('strong');
       nm.textContent = r.name || '(no name given)';
-      const ph = document.createElement('span');
-      ph.textContent = r.phone || '(no number)';
-      text.append(nm, ph);
+      const meta = document.createElement('span');
+      meta.textContent = r.relation ? `${r.phone} · ${r.relation}` : (r.phone || '(no number)');
+      text.append(nm, meta);
 
       const remove = document.createElement('button');
       remove.type = 'button';
@@ -1128,9 +1250,9 @@ function renderReferrals(q) {
       remove.setAttribute('aria-label', `Remove ${r.name || 'this person'}`);
       remove.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
       remove.addEventListener('click', () => {
-        state.answers[q.key] = referralList(q).filter((_, j) => j !== i);
+        state.answers[key] = referralList(q).filter((_, j) => j !== i);
         buzz();
-        renderReferrals(q);
+        renderReferralBlock(q, wrap);
       });
 
       li.append(text, remove);
@@ -1146,19 +1268,9 @@ function renderReferrals(q) {
     }
   }
 
-  el.choiceGrid.appendChild(wrap);
-
-  // Never gated: this whole screen is a favour, not a requirement.
-  el.continueBtn.hidden = false;
-  el.continueBtn.disabled = false;
 }
 
 function updateContinueVisibility(q) {
-  if (q.type === 'referrals') {
-    el.continueBtn.hidden = false;
-    el.continueBtn.disabled = false;
-    return;
-  }
   if (q.type === 'text') {
     el.continueBtn.hidden = false;
     el.continueBtn.disabled = !isTextAnswerValid(q);

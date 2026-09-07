@@ -28,7 +28,7 @@ const HEADERS = [
   'RM Note (day to day)', 'Walked Through', 'Wants To Hear More About',
   'RM Rating (overall)', 'RM Note',
   'Wants Contact Every',
-  'App Rating (1-10)', 'App Feedback',
+  'App Rating (1-10)', 'App Issues', 'App Feedback',
   'Recommend Score (0-10)', 'Recommend Reason', 'Referrals',
   'Webinar Interest', 'Email Updates', 'New Needs',
   'Feedback / Suggestions / Complaints',
@@ -71,6 +71,7 @@ function doPost(e) {
     sanitizeForSheet(data.rmNote),
     sanitizeForSheet(data.frequency),
     sanitizeForSheet(data.appRating),
+    sanitizeForSheet(data.appIssues),
     sanitizeForSheet(data.appNote),
     sanitizeForSheet(data.nps),
     sanitizeForSheet(data.npsNote),
@@ -116,7 +117,7 @@ function formatSheet(sheet, headers) {
   // so the whole quality block stays readable side by side on one screen.
   var widths = [150, 150, 120, 180, 100, 180, 260, 90, 220, 170]
     .concat(QUALITY_COLUMNS.map(function () { return 75; }))
-    .concat([220, 240, 220, 90, 220, 150, 90, 240, 110, 220, 260, 240, 120, 220, 340]);
+    .concat([220, 240, 220, 90, 220, 150, 90, 240, 240, 110, 220, 260, 240, 120, 220, 340]);
   for (var i = 0; i < headers.length && i < widths.length; i++) {
     sheet.setColumnWidth(i + 1, widths[i]);
   }

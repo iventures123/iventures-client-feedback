@@ -44,6 +44,7 @@ const LABELS = {
   reporting: labelsById(CONFIG.reportingTimeliness),
   frequency: labelsById(CONFIG.contactFrequency),
   webinars: labelsById(CONFIG.webinarTopics),
+  appIssues: labelsById(CONFIG.appIssues),
   mailOptIn: labelsById(CONFIG.mailOptIn),
   newNeeds: labelsById(CONFIG.newNeeds),
 };
@@ -163,12 +164,21 @@ module.exports = async function handler(req, res) {
       // Rated out of 10 like the NPS, not out of 5 like the star questions —
       // and skippable, so an empty cell means "never used it", not "hated it".
       appRating: Number(answers.appRating) ? `${Math.min(10, Math.max(1, Number(answers.appRating)))}/10` : '',
+      // Only ever populated below the threshold (see the issues block in
+      // app.js) — an empty cell next to a high score means "nothing wrong",
+      // not "they didn't say".
+      appIssues: describe('appIssues', answers.appIssues),
       appNote: String(answers.appNote || '').trim(),
       // One cell, one person per line — a Sheet column you can read down and
       // dial from, rather than JSON someone has to unpick.
       referrals: Array.isArray(answers.referrals)
         ? answers.referrals.slice(0, 10)
-            .map((r) => `${clamp(r && r.name, 100).trim()} — ${clamp(r && r.phone, 30).trim()}`.trim())
+            .map((r) => {
+              const name = clamp(r && r.name, 100).trim();
+              const phone = clamp(r && r.phone, 30).trim();
+              const rel = clamp(r && r.relation, 40).trim();
+              return `${name} — ${phone}${rel ? ` (${rel})` : ''}`.trim();
+            })
             .filter((line) => line && line !== '—')
             .join('\n')
         : '',

@@ -740,7 +740,6 @@ body { overscroll-behavior-y: contain; }
 /* Two ways to add someone: the browser's own contact picker where it exists,
    and typing, which always works. The picker button is deliberately not the
    only affordance — it is Chrome-on-Android only. */
-.referral-wrap { display: flex; flex-direction: column; }
 .referral-pick {
   width: 100%; justify-content: center; gap: 10px; margin-bottom: 10px;
 }
@@ -785,3 +784,33 @@ body { overscroll-behavior-y: contain; }
   transition: color 0.15s ease, border-color 0.15s ease;
 }
 .referral-remove:hover { color: var(--orange-text); border-color: var(--orange-text); }
+
+/* Word under the slider number — the scale's own vocabulary, so a 6 reads
+   the same to everyone who picks it. */
+.slider-caption {
+  margin: 2px 0 14px; text-align: center;
+  font-size: 0.92rem; font-weight: 600; color: var(--text-secondary);
+}
+/* Issue chips, revealed under a low app score. */
+.app-issues { margin-top: 26px; animation: itemIn 0.3s var(--ease-expo); }
+.issue-row { display: flex; flex-wrap: wrap; gap: 8px; }
+/* The referral block shares the recommend screen, so it needs a rule above it
+   to read as a second, separate ask rather than more of the same question. */
+.referral-wrap { margin-top: 30px; padding-top: 26px; border-top: 1px solid var(--border); }
+.referral-heading {
+  font-family: var(--font-display); font-size: 1.12rem; line-height: 1.35;
+  font-weight: 600; color: var(--text); margin: 0 0 8px;
+}
+.referral-privacy { text-align: left; }
+.referral-relation { appearance: none; cursor: pointer; background-image: none; }
+
+/* "And then what happens?" — confirmation under a choice question, once
+   something has actually been picked. */
+.picked-note {
+  display: flex; align-items: flex-start; gap: 9px;
+  margin: 18px 0 0; padding: 13px 15px;
+  background: var(--blue-accent-light); border-radius: var(--radius-sm);
+  font-size: 0.86rem; line-height: 1.5; color: var(--navy-deep);
+  animation: itemIn 0.3s var(--ease-expo);
+}
+.picked-note svg { flex: 0 0 auto; margin-top: 2px; color: var(--navy); }
