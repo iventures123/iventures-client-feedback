@@ -115,30 +115,69 @@ been shown them, without anyone having to criticise their RM to say so.
 - `apps-script/Code.gs` — pastes into Google Apps Script to receive that log
   and append a row.
 
-## 1. Set up Google Sheets logging (~3 minutes, one time)
+## 1. Connect the Google Sheet (~5 minutes, one time)
 
-1. Create a new Google Sheet (sheets.new). Name it something like "iVentures
-   Client Feedback — Confidential", and make sure only the management team has
-   access to it (do not share it with RMs).
-2. In the Sheet, go to **Extensions → Apps Script**.
-3. Delete any starter code, and paste in the contents of
-   [`apps-script/Code.gs`](apps-script/Code.gs).
-4. Click **Deploy → New deployment**.
+This is the only step that cannot be done for you — it needs your Google
+account. Nothing is recorded until it is done.
+
+1. Go to **[sheets.new](https://sheets.new)** and name the file something like
+   `iVentures Client Feedback — Confidential`.
+2. **Share it with the management team only.** It will hold candid criticism of
+   named employees, client phone numbers, and the numbers of people they
+   introduce. Do not share it with RMs — the form promises their answers are
+   not shown to them, and that promise is only as good as this setting.
+3. In the Sheet: **Extensions → Apps Script**.
+4. Delete the placeholder code, paste in the whole of
+   [`apps-script/Code.gs`](apps-script/Code.gs), and save.
+5. **Deploy → New deployment**
    - Type: **Web app**
    - Execute as: **Me**
    - Who has access: **Anyone**
-5. Click **Deploy**, authorize it when prompted, then copy the **Web app URL**
-   it gives you (looks like `https://script.google.com/macros/s/XXXXX/exec`).
-6. That's your `SHEETS_WEBHOOK_URL` — add it as a Vercel environment variable
-   in step 2 below.
+   (That last one sounds alarming but is required: it lets the form's server
+   post a row. The Web App only ever *accepts* a row — it never returns your
+   data to anyone.)
+6. Click **Deploy**, authorise it, and copy the **Web app URL**
+   (`https://script.google.com/macros/s/…/exec`).
+7. Give that URL to the site as `SHEETS_WEBHOOK_URL` — see step 2 below.
 
-Every submission lands as one row in a single "Client Feedback" tab — there's
-no public/private split like the review form this was forked from, because
-everything on this form is private by design.
+Two tabs appear on their own: **Client Feedback** (one row per response, 36
+columns) and **Dashboard**.
 
-There is no email alert — check the sheet directly, or turn one on with no
-code: **Tools → Notification settings → Any changes are made → Email me right
-away.**
+### Re-pasting Code.gs after a change
+
+Whenever the question set changes, paste the new `Code.gs` over the old one and
+then **Deploy → Manage deployments → edit → New version**. The header row
+repairs itself; existing rows are never rewritten or moved.
+
+## The dashboard
+
+The dashboard is a tab **inside the same spreadsheet**, not a website. That is
+deliberate: a hosted dashboard would need its own URL, its own password and its
+own copy of the data, and this data is candid criticism of named staff plus
+client and third-party phone numbers. Living in the Sheet, it inherits the
+access control you already set — no public endpoint, nothing new to leak.
+
+Open the file and use the **iVentures** menu:
+
+- **Refresh dashboard** — rebuilds it now.
+- **Auto-refresh every hour** — run once; after that it maintains itself.
+
+What it shows:
+
+| Section | Why it's there |
+|---|---|
+| Responses, average recommend score, NPS | The headline, and the number you can compare to anything else you track |
+| **By relationship manager** | Each manager's average across all seven skillsets, from clients who named them as main contact. This is the training plan |
+| Also rated (secondary contact) | Scores for managers who weren't the main contact, kept separate so they can't dilute the detailed averages |
+| **What clients have not been walked through** | Sorted by biggest gap. Every "never mentioned" is a product conversation that hasn't happened |
+| Reports on time / contact frequency | Two operational failures you can fix the same week |
+| Portfolio & allocation, the app, app issues | Where satisfaction is leaking, and specifically why |
+| Webinar interest, email opt-in, new needs | Your invitation and follow-up lists |
+| Introductions offered | Who was introduced, and by whom |
+| **Call these clients first** | Everyone scoring 6 or below, worst first, with their phone number and their own words next to it |
+
+That last table is the point of the whole exercise: a call list, not a page of
+averages.
 
 ## 2. Deploy to Vercel
 

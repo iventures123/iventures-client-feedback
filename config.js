@@ -108,7 +108,9 @@
       { id: 'venture', label: 'Startup & venture funds', sub: 'Private markets and venture capital' },
       { id: 'global-etfs', label: 'Global ETFs beyond India', sub: 'US, UK, Japan, South Korea, China' },
       { id: 'portfolio-review', label: 'A review of my existing portfolio', sub: 'Going through what you already hold' },
-      { id: 'none', label: 'None of these, so far' },
+      // No comma in this label on purpose: multi-select answers are stored
+      // comma-joined, so a label containing one splits into two on the way back.
+      { id: 'none', label: 'None of these so far' },
       { id: 'other', label: 'Other product baskets', hasOther: true },
     ],
     rmCoverageOtherPlaceholder: 'Which other baskets have they walked you through?',
