@@ -348,6 +348,10 @@ h1 .accent { color: var(--orange-text); font-style: italic; }
 .grid-dot:hover { border-color: var(--navy); }
 .grid-dot:active { transform: scale(0.94); }
 .grid-dot.selected { background: var(--navy); border-color: var(--navy); color: #fff; }
+.grid-anchors {
+  display: flex; justify-content: space-between; margin-top: 8px;
+  font-size: 0.74rem; font-weight: 600; color: var(--text-muted, var(--text-secondary)); opacity: 0.8;
+}
 .grid-counter {
   text-align: center; font-size: 0.84rem; font-weight: 600; color: var(--text-secondary);
   margin: 16px 0 0;

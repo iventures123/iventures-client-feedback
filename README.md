@@ -11,22 +11,39 @@ Google review and never shows an answer back to the client's RM.
 
 ## The flow
 
-| # | Screen | Captures |
-|---|---|---|
-| 1 | Name (+ city) | Who's answering, and where they're based |
-| 2 | Which RM | Who the feedback is about |
-| 3 | Services currently using | The shape of the existing relationship |
-| 4 | Portfolio & performance | 1–5 + optional note |
-| 5 | **How are we doing on each of these?** | Six sub-parts, 1–5 each: communication, responsiveness, follow-ups, reporting & presentation, proactivity, understanding goals — plus an optional note |
-| 6 | "How has [RM] been for you personally" | 1–5 + optional note, RM's name filled in live |
-| 7 | Recommend score | 0–10 slider + optional reason |
-| 8 | New needs | Multi-select cross-sell signals |
-| 9 | Phone + email | Optional, for follow-up |
-| — | Anything else | Optional open note, then Thank You |
+| # | Eyebrow | Screen | Captures |
+|---|---|---|---|
+| 1 | First things first | Name (+ city) | Who's answering, and where they're based |
+| 2 | So we can reach you | **Mobile (required) + email (optional)** | The number to call them back on |
+| 3 | Your relationship | Which RM | Who the feedback is about |
+| 4 | What we look after | Services currently using | The shape of the existing relationship |
+| 5 | Your portfolio | Portfolio & performance | 1–5 + optional note |
+| 6 | The day to day | **How are we doing on each of these?** | Six sub-parts, 1–5 each: communication, responsiveness, follow-ups, reporting & presentation, proactivity, understanding goals — plus an optional note |
+| 7 | Just between us | "How has [RM] been for you personally" | 1–5 + optional note, RM's first name filled in live |
+| 8 | The big one | Recommend score | 0–10 slider + optional reason |
+| 9 | Looking ahead | New needs | Multi-select cross-sell signals |
+| — | Last one | Anything else | Optional open note, then Thank You |
 
 Every choice question carries a free-text "Other" option, and every rating
 question has an optional comment box, so a client is never forced to squeeze
 their answer into a preset.
+
+Screens are labelled by section ("Just between us") rather than "Step 4 of
+10" — a visible countdown is itself a cue that this will take a while. The
+progress bar still carries position.
+
+### The one required field
+
+The mobile number on screen 2 is the only thing the form insists on, because
+it is what turns a written complaint into a phone call. It's validated as
+7–15 digits — a plausibility check, not an Indian-format check, so an NRI
+client's `+971…` number passes. Everything else, email included, is optional,
+and a questionable email produces an advisory line rather than a block.
+
+Asking for it that early is a deliberate trade: a contact field before
+anything interesting costs some completions, but a client who abandons
+halfway is exactly the one worth calling, and this way we still have their
+number.
 
 ## Why this exists
 
@@ -36,7 +53,7 @@ will ever read it — that promise is stated on the welcome screen and repeated
 right before the RM rating. **The Sheet this logs to should only ever be shared
 with the management team, never with RMs, or that promise breaks.**
 
-Question 5 is the one that earns its keep on a call: a single "rate our
+Question 6 is the one that earns its keep on a call: a single "rate our
 service" star tells you a client is unhappy but never which part to fix.
 Six sub-parts on one screen tell you it's follow-ups, not communication —
 which is a conversation you can actually have with an RM.
@@ -54,7 +71,7 @@ which is a conversation you can actually have with an RM.
 ## 1. Set up Google Sheets logging (~3 minutes, one time)
 
 1. Create a new Google Sheet (sheets.new). Name it something like "iVentures
-   Client Feedback — Confidential", and make sure only senior management has
+   Client Feedback — Confidential", and make sure only the management team has
    access to it (do not share it with RMs).
 2. In the Sheet, go to **Extensions → Apps Script**.
 3. Delete any starter code, and paste in the contents of
@@ -116,13 +133,15 @@ prefer it.
 
 - **RM / relationship manager list**: `team` in `config.js`.
 - **Services currently using**: `services` in `config.js`.
-- **Service-quality sub-parts** (question 5): `serviceQualities` in `config.js`.
+- **Service-quality sub-parts** (question 6): `serviceQualities` in `config.js`.
   Adding a row there also needs its key + column header added to
   `QUALITY_COLUMNS` in `apps-script/Code.gs`, and a redeploy of the script —
   nothing else changes.
 - **Cities**: `cities` / `overseasCities` in `config.js`.
 - **"New needs" options**: `newNeeds` in `config.js`.
-- **Question wording and order**: `QUESTIONS` array in `app.js`.
+- **Question wording, order, section labels**: `QUESTIONS` array in `app.js`
+  (each entry's `eyebrow`, `title`, `sub`; `title`/`sub` may be functions if
+  they need to react to an earlier answer).
 - **Link preview card** (WhatsApp/email): `assets/og-image.png` plus the
   `og:` meta tags in `index.html`. The `og:image` and `og:url` tags are
   absolute URLs — if the deployment URL ever changes, update them or the

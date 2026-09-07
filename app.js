@@ -36,14 +36,47 @@ function selectedRmName() {
 const QUESTIONS = [
   {
     key: 'name', type: 'text', icon: ICONS.name,
+    eyebrow: 'First things first',
     title: 'Quick intro — what’s your name?',
     sub: 'So we know whose feedback this is. Seen and used only by our team.',
     placeholder: 'e.g. Vikram Singhania',
-    autocomplete: 'name',
+    inputType: 'text', autocomplete: 'name',
     pills: { key: 'city', label: 'Where are you based? (optional)', options: CITY_OPTIONS },
   },
   {
+    // Asked second, on purpose: the number is what turns a written complaint
+    // into a phone call, and someone who abandons halfway is exactly the
+    // client worth calling. Required — email stays optional beside it.
+    key: 'phone', type: 'text', icon: ICONS.phone,
+    eyebrow: 'So we can reach you',
+    title: () => (firstName()
+      ? `${firstName()}, what’s the best number to reach you on?`
+      : 'What’s the best number to reach you on?'),
+    // Function form so an overseas client is asked for a country code and
+    // everyone else isn't — the city pill on the previous screen already
+    // told us which.
+    sub: () => (state.answers.city === 'overseas'
+      ? 'So Nirmal or the team can call you back personally. Please include your country code. It stays with our team.'
+      : 'So Nirmal or the team can call you back personally about anything you raise. It stays with our team.'),
+    placeholder: 'e.g. 98765 43210',
+    fieldLabel: 'Mobile number (required)',
+    inputType: 'tel', autocomplete: 'tel', inputMode: 'tel',
+    // Deliberately a plausibility check, not a format check: clients here are
+    // in Delhi, Dubai and Singapore, so anything from 7 to 15 digits is fair
+    // game (that's the E.164 range). A stricter "10 digits" rule would lock
+    // out every NRI on the list.
+    validate: (value) => {
+      const digits = String(value || '').replace(/\D/g, '');
+      return digits.length >= 7 && digits.length <= 15;
+    },
+    secondary: {
+      key: 'email', label: 'Email (optional)', placeholder: 'e.g. vikram@email.com',
+      inputType: 'email', autocomplete: 'email', inputMode: 'email',
+    },
+  },
+  {
     key: 'rm', type: 'single', icon: ICONS.rms,
+    eyebrow: 'Your relationship',
     title: 'Who is your relationship manager at iVentures?',
     sub: 'This is so we know who your feedback is about — it is never shared back with them.',
     otherPlaceholder: 'Who do you work with?',
@@ -51,6 +84,7 @@ const QUESTIONS = [
   },
   {
     key: 'services', type: 'multi', icon: ICONS.services,
+    eyebrow: 'What we look after',
     title: 'Which services are you currently using with us?',
     sub: 'Pick everything that applies — this helps us understand the full relationship.',
     display: 'chips',
@@ -59,6 +93,7 @@ const QUESTIONS = [
   },
   {
     key: 'portfolioRating', type: 'stars', icon: ICONS.portfolio,
+    eyebrow: 'Your portfolio',
     title: 'How satisfied are you with your portfolio’s performance and the advice behind it?',
     sub: 'Be honest — this is seen and used only by our team, not your RM.',
     followUp: { key: 'portfolioNote', label: 'Want to add anything? (optional)', placeholder: 'e.g. a specific fund, a decision, a number that stood out…' },
@@ -67,6 +102,7 @@ const QUESTIONS = [
     // One screen, several sub-parts. A single "rate our service" star tells
     // you a client is unhappy but never which part to fix — this one does.
     key: 'serviceGrid', type: 'grid', icon: ICONS.relationship,
+    eyebrow: 'The day to day',
     title: 'How are we doing on each of these?',
     sub: 'One tap per row — 1 needs work, 5 is excellent.',
     rows: CONFIG.serviceQualities,
@@ -74,6 +110,7 @@ const QUESTIONS = [
   },
   {
     key: 'rmRating', type: 'stars', icon: ICONS.name,
+    eyebrow: 'Just between us',
     // Function form so the title updates with whichever RM was picked on the
     // previous screen — same mechanism as api/submit's dynamic labels.
     title: () => `Personally, how has ${selectedRmName()} been for you?`,
@@ -82,6 +119,7 @@ const QUESTIONS = [
   },
   {
     key: 'nps', type: 'slider', icon: ICONS.recommend,
+    eyebrow: 'The big one',
     title: 'How likely are you to recommend iVentures to a friend or colleague?',
     sub: 'Drag to a number from 0 (not likely) to 10 (extremely likely).',
     sliderMin: 0, sliderMax: 10, sliderLowLabel: 'Not likely', sliderHighLabel: 'Extremely likely',
@@ -89,6 +127,7 @@ const QUESTIONS = [
   },
   {
     key: 'newNeeds', type: 'multi', icon: ICONS.outcome,
+    eyebrow: 'Looking ahead',
     title: 'Is there anything else on your mind we could help with?',
     sub: 'Pick everything that applies.',
     display: 'chips',
@@ -98,23 +137,6 @@ const QUESTIONS = [
     // the multi-select click handler).
     exclusiveOption: 'nothing',
     options: NEW_NEEDS_OPTIONS,
-  },
-  {
-    // Deliberately near the END, not with the name. Optional admin fields
-    // asked before anything interesting is where people bail; by this point
-    // the client has answered everything that matters, so a skipped contact
-    // field costs nothing. The firm already has these on file anyway — the
-    // value here is that whoever follows up on a specific answer doesn't have
-    // to go looking for them.
-    key: 'phone', type: 'text', icon: ICONS.phone,
-    title: 'Finally — how can we reach you to follow up?',
-    sub: 'Optional. Used only by our team to get back to you, never shared or sold.',
-    placeholder: 'e.g. 98765 43210',
-    autocomplete: 'tel', inputMode: 'tel', optional: true,
-    secondary: {
-      key: 'email', label: 'Email (optional)', placeholder: 'e.g. vikram@email.com',
-      autocomplete: 'email', inputMode: 'email',
-    },
   },
 ];
 
@@ -320,8 +342,12 @@ function renderQuestion(q) {
   el.qEyebrow.style.display = '';
   el.qEyebrow.textContent = q.eyebrow || `Step ${state.stepIndex + 1} of ${totalSteps}`;
   el.qTitle.textContent = typeof q.title === 'function' ? q.title() : q.title;
-  el.qSub.textContent = q.sub || '';
-  el.qSub.style.display = q.sub ? 'block' : 'none';
+  // Function form, same as the title: lets a question's sub-line react to an
+  // earlier answer (the phone screen asks an overseas client for a country
+  // code and nobody else).
+  const subText = typeof q.sub === 'function' ? q.sub() : q.sub;
+  el.qSub.textContent = subText || '';
+  el.qSub.style.display = subText ? 'block' : 'none';
 
   el.choiceGrid.innerHTML = '';
   el.choiceGrid.className = 'choice-grid' + (q.display === 'chips' ? ' chips' : '');
@@ -340,8 +366,23 @@ function renderQuestion(q) {
   if (q.type === 'text') {
     el.choiceGrid.hidden = true;
     el.textInput.hidden = false;
-    el.textInputLabel.textContent = typeof q.title === 'function' ? q.title() : q.title;
+    // A visible field label when the question sets one, so "(required)" sits
+    // right above the box it applies to. Continue stays disabled until the
+    // number is plausible, and a disabled button swallows the tap with no
+    // explanation — without the word "required" on screen that's a silent
+    // dead end. Falls back to the screen-reader-only label otherwise.
+    if (q.fieldLabel) {
+      el.textInputLabel.textContent = q.fieldLabel;
+      el.textInputLabel.className = 'secondary-input-label';
+    } else {
+      el.textInputLabel.textContent = typeof q.title === 'function' ? q.title() : q.title;
+      el.textInputLabel.className = 'sr-only';
+    }
     el.textInput.placeholder = q.placeholder || '';
+    // type, not just inputMode: it's what gets a phone the numeric keypad and
+    // lets the browser offer the right saved value to autofill. Reset per
+    // render because this is one shared input reused by every text question.
+    el.textInput.type = q.inputType || 'text';
     el.textInput.autocomplete = q.autocomplete || 'off';
     el.textInput.inputMode = q.inputMode || '';
     el.textInput.value = state.answers[q.key] || '';
@@ -351,9 +392,9 @@ function renderQuestion(q) {
       updateContactHint(q);
     };
     el.textInput.onkeydown = (event) => {
-      // Enter moves on for a required field once it's filled; for an
-      // optional field (e.g. phone) Enter should still work even empty.
-      const canAdvance = q.optional || (state.answers[q.key] || '').trim();
+      // Enter follows exactly the same rule as the Continue button, so the
+      // keyboard can't sneak past a check the button enforces.
+      const canAdvance = isTextAnswerValid(q);
       if (event.key === 'Enter' && canAdvance) {
         event.preventDefault();
         el.textInput.blur();
@@ -368,6 +409,7 @@ function renderQuestion(q) {
       el.secondaryInputWrap.hidden = false;
       el.secondaryInputLabel.textContent = q.secondary.label || '';
       el.secondaryInput.placeholder = q.secondary.placeholder || '';
+      el.secondaryInput.type = q.secondary.inputType || 'text';
       el.secondaryInput.autocomplete = q.secondary.autocomplete || 'off';
       el.secondaryInput.inputMode = q.secondary.inputMode || '';
       el.secondaryInput.value = state.answers[q.secondary.key] || '';
@@ -481,13 +523,25 @@ function updateContactHint(q) {
   if (!el.contactHint || !q.secondary) return;
   const phone = (state.answers[q.key] || '').trim();
   const email = (state.answers[q.secondary.key] || '').trim();
-  const digits = phone.replace(/\D/g, '');
-  const problems = [];
-  if (phone && (digits.length < 7 || digits.length > 15)) problems.push('that phone number looks incomplete');
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) problems.push('that email address looks off');
-  if (!problems.length) { el.contactHint.hidden = true; return; }
+  // Only complain about a number once they've started typing one — an empty
+  // field on arrival isn't a mistake, and the "(required)" label already says
+  // what's needed.
+  const phoneBad = !!phone && !isTextAnswerValid(q);
+  const emailBad = !!email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+
+  if (!phoneBad && !emailBad) { el.contactHint.hidden = true; return; }
   el.contactHint.hidden = false;
-  el.contactHint.textContent = `Just checking — ${problems.join(' and ')}. You can still continue.`;
+
+  // The number blocks Continue and the email doesn't, so the two cases can't
+  // share a closing line — telling someone they "can still continue" while
+  // the button sits disabled is worse than saying nothing.
+  if (phoneBad && emailBad) {
+    el.contactHint.textContent = 'That number looks incomplete — please check it. The email address looks off too.';
+  } else if (phoneBad) {
+    el.contactHint.textContent = 'That number looks incomplete — please check it so we can reach you.';
+  } else {
+    el.contactHint.textContent = 'Just checking — that email address looks off. You can still continue.';
+  }
 }
 
 function paintChoice(btn, selected) {
@@ -616,6 +670,22 @@ function renderGrid(q) {
     }
 
     rowEl.append(head, scale);
+
+    // Anchors under the first row only. The sub-line explains the scale, but
+    // it scrolls away on a phone by the third row — and a bare row of digits
+    // with no anchor is where people start guessing which end is good.
+    // Repeating them on all six rows is noise; once at the top is enough.
+    if (!wrap.childElementCount) {
+      const anchors = document.createElement('div');
+      anchors.className = 'grid-anchors';
+      const low = document.createElement('span');
+      low.textContent = 'Needs work';
+      const high = document.createElement('span');
+      high.textContent = 'Excellent';
+      anchors.append(low, high);
+      rowEl.appendChild(anchors);
+    }
+
     wrap.appendChild(rowEl);
   });
 
@@ -764,10 +834,20 @@ function renderSlider(q) {
   el.continueBtn.disabled = !hasAnswer;
 }
 
+// One rule for whether a text question is answered well enough to move on,
+// used by both the Continue button and the Enter key. `optional` skips the
+// check entirely; `validate` replaces the default "not blank" test.
+function isTextAnswerValid(q) {
+  if (q.optional) return true;
+  const value = state.answers[q.key] || '';
+  if (q.validate) return q.validate(value);
+  return !!value.trim();
+}
+
 function updateContinueVisibility(q) {
   if (q.type === 'text') {
     el.continueBtn.hidden = false;
-    el.continueBtn.disabled = q.optional ? false : !(state.answers[q.key] || '').trim();
+    el.continueBtn.disabled = !isTextAnswerValid(q);
     return;
   }
   if (q.type === 'multi') {
