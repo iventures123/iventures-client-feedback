@@ -202,7 +202,7 @@ Redeploy so the env var takes effect:
 vercel --prod
 ```
 
-You'll get a URL like `https://iventures-client-feedback-xxxx.vercel.app`.
+You'll get a URL like `https://iventures-client-survey.vercel.app`.
 Turn it into a WhatsApp-shareable link, or a QR code for in-person use.
 
 ## Local development
