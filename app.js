@@ -19,6 +19,9 @@ const ICONS = {
   portfolio: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>',
   relationship: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>',
   recommend: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>',
+  doc: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>',
+  mail: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><polyline points="22,6 12,13 2,6"></polyline></svg>',
+  calendar: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>',
   app: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>',
   globe: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>',
   outcome: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>',
@@ -97,9 +100,19 @@ const QUESTIONS = [
   {
     key: 'portfolioRating', type: 'stars', icon: ICONS.portfolio,
     eyebrow: 'Your portfolio',
-    title: 'How satisfied are you with your portfolio’s performance and the advice behind it?',
+    title: 'Are you happy with your portfolio’s performance and the asset allocation mix?',
     sub: 'Be honest — this is seen and used only by our team, not your RM.',
-    followUp: { key: 'portfolioNote', label: 'Want to add anything? (optional)', placeholder: 'e.g. a specific fund, a decision, a number that stood out…' },
+    followUp: { key: 'portfolioNote', label: 'Want to add anything? (optional)', placeholder: 'e.g. a fund, a decision, the mix between asset classes…' },
+  },
+  {
+    // Its own screen rather than a row in the grid below: timeliness is a
+    // yes/no fact with a date attached, not a matter of degree, and "I have
+    // to chase for them" is a different problem from "they never come".
+    key: 'reporting', type: 'single', icon: ICONS.doc,
+    eyebrow: 'Paperwork',
+    title: 'Do your tax reports and statements reach you on time?',
+    sub: 'Whenever you have needed or asked for them.',
+    options: CONFIG.reportingTimeliness,
   },
   {
     // One screen, several sub-parts. A single "rate our service" star tells
@@ -142,6 +155,16 @@ const QUESTIONS = [
     followUp: { key: 'rmNote', label: 'Anything you\u2019d like to tell us about them? (optional)', placeholder: 'Whatever you\u2019d say if they weren\u2019t in the room\u2026' },
   },
   {
+    // The single most fixable thing on this form: a client who wants monthly
+    // contact and gets it yearly reads as "they never call me", and nobody
+    // ever finds out unless asked outright.
+    key: 'frequency', type: 'single', icon: ICONS.calendar,
+    eyebrow: 'Staying in touch',
+    title: 'How often would you like to hear from your wealth RM?',
+    sub: 'Tell us what suits you, and we will hold ourselves to it.',
+    options: CONFIG.contactFrequency,
+  },
+  {
     // The app is a different thing from the person — someone can love their
     // RM and find the app unusable, and a single "how are we doing" would
     // never separate the two. Optional, because plenty of clients have never
@@ -161,6 +184,25 @@ const QUESTIONS = [
     sub: 'Drag to a number from 0 (not likely) to 10 (extremely likely).',
     sliderMin: 0, sliderMax: 10, sliderLowLabel: 'Not likely', sliderHighLabel: 'Extremely likely',
     followUp: { key: 'npsNote', label: 'What’s the main reason for that score? (optional)', placeholder: 'Totally optional, but it helps us a lot…' },
+  },
+  {
+    key: 'webinars', type: 'multi', icon: ICONS.calendar,
+    eyebrow: 'Worth your evening?',
+    title: 'Which of these would you actually attend?',
+    sub: 'Small, invitation-only sessions. Tick anything you would want an invite to.',
+    display: 'chips',
+    otherPlaceholder: CONFIG.webinarOtherPlaceholder,
+    exclusiveOption: 'none',
+    options: CONFIG.webinarTopics,
+  },
+  {
+    // Consent gets its own screen and starts unselected — an opt-in bundled
+    // in among other answers, or pre-ticked, is not consent.
+    key: 'mailOptIn', type: 'single', icon: ICONS.mail,
+    eyebrow: 'Staying in the loop',
+    title: 'Would you like us to email you about what we are working on?',
+    sub: 'New research, ideas and invitations. Unsubscribe whenever you like — we never pass your details to anyone.',
+    options: CONFIG.mailOptIn,
   },
   {
     key: 'newNeeds', type: 'multi', icon: ICONS.outcome,

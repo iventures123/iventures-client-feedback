@@ -26,7 +26,7 @@
 
     trustLine: 'SEBI Registered · Reg. No. INA000019026',
 
-    thankYouSubtitle: 'This has been recorded with our team, in confidence. We will use it to improve how we look after you — and if you have flagged something that needs attention, we will follow up with you personally.',
+    thankYouSubtitle: 'This has been recorded with our team, in confidence. We will use it to put the right people and the right ideas behind you — so you and your family get the best of the iVentures team. If you have flagged something that needs attention, we will follow up personally.',
 
     // --- Welcome screen copy ---------------------------------------------
     hero: {
@@ -34,7 +34,7 @@
       titlePrefix: 'A Quick, Private',
       titleAccent: 'Check-In',
       titleSuffix: '',
-      subtitle: 'Nirmal and the team read every response personally — and act on it. This is seen and used only by us, never shared with your relationship manager, so please be candid.',
+      subtitle: 'So we can put the right team, the right skills and the right knowledge behind you and your family. Read personally by Nirmal and the team, never shared with your relationship manager — so please be candid.',
       ctaLabel: "Let's Begin",
       hint: 'A handful of quick questions — most are a single tap. Please answer honestly.',
     },
@@ -100,13 +100,61 @@
     // through is the more useful signal, and it arrives as an unticked box
     // without anyone having to criticise their RM to say so.
     rmCoverage: [
+      { id: 'mutual-funds', label: 'Mutual funds' },
+      { id: 'pms', label: 'PMS', sub: 'Portfolio Management Services' },
+      { id: 'aif', label: 'AIF', sub: 'Alternative Investment Funds' },
       { id: 'fixed-income', label: 'Fixed income', sub: 'Bonds, debt, structured yield' },
-      { id: 'venture', label: 'Startup & venture funds', sub: 'Private markets, VC and AIF opportunities' },
+      { id: 'venture', label: 'Startup & venture funds', sub: 'Private markets and venture capital' },
       { id: 'global-etfs', label: 'Global ETFs beyond India', sub: 'US, UK, Japan, South Korea, China' },
       { id: 'none', label: 'None of these, so far' },
+      { id: 'other', label: 'Other product baskets', hasOther: true },
+    ],
+    rmCoverageOtherPlaceholder: 'Which other baskets have they walked you through?',
+
+    // --- Webinar / event interest --------------------------------------------
+    // Doubles as an invitation list: whatever gets ticked here is a client who
+    // has already said yes to being invited, which is a warmer list than any
+    // segmentation we could infer.
+    webinarTopics: [
+      { id: 'wills-trusts', label: 'Wills & trust creation' },
+      { id: 'fund-managers', label: 'Sessions with top fund managers' },
+      { id: 'kids-literacy', label: 'Financial literacy for children' },
+      { id: 'kids-income', label: 'Building passive income for children' },
+      { id: 'none', label: 'Not right now' },
       { id: 'other', label: 'Something else', hasOther: true },
     ],
-    rmCoverageOtherPlaceholder: 'What else have they walked you through?',
+    webinarOtherPlaceholder: 'What would you actually turn up for?',
+
+    // --- Email opt-in ---------------------------------------------------------
+    // Its own screen, and never pre-selected: consent bundled in with other
+    // answers is not consent. No answer means no, which is the right default.
+    mailOptIn: [
+      { id: 'yes', label: 'Yes, keep me posted' },
+      { id: 'no', label: 'No, thank you' },
+    ],
+
+    // --- Reporting timeliness -------------------------------------------------
+    // Deliberately not a 1-5: "3/5 on time" is uninterpretable, whereas
+    // "yes, but only when I chase" names a specific, fixable failure.
+    reportingTimeliness: [
+      { id: 'always', label: 'Always on time', sub: 'Without my ever having to ask' },
+      { id: 'on-request', label: 'Yes — but I have to ask', sub: 'They arrive once I chase them' },
+      { id: 'sometimes-late', label: 'Sometimes late' },
+      { id: 'problem', label: 'No — this has been a problem' },
+      { id: 'na', label: 'Not applicable to me' },
+    ],
+
+    // --- How often they want to hear from their RM ---------------------------
+    // Worth asking outright: mismatched expectations about contact frequency
+    // sit behind a good share of "they never call me" complaints, and it is
+    // the one thing on this form that can be fixed the same afternoon.
+    contactFrequency: [
+      { id: 'monthly', label: 'Monthly' },
+      { id: 'quarterly', label: 'Quarterly' },
+      { id: 'half-yearly', label: 'Every six months' },
+      { id: 'yearly', label: 'Once a year' },
+      { id: 'as-needed', label: 'Only when something needs attention' },
+    ],
 
     // --- Services currently in use -------------------------------------------
     // What the client is ALREADY using, as opposed to `newNeeds` below (what

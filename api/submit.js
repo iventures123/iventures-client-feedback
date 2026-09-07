@@ -41,6 +41,10 @@ const LABELS = {
   rm: labelsById(CONFIG.team),
   services: labelsById(CONFIG.services),
   rmCoverage: labelsById(CONFIG.rmCoverage),
+  reporting: labelsById(CONFIG.reportingTimeliness),
+  frequency: labelsById(CONFIG.contactFrequency),
+  webinars: labelsById(CONFIG.webinarTopics),
+  mailOptIn: labelsById(CONFIG.mailOptIn),
   newNeeds: labelsById(CONFIG.newNeeds),
 };
 const OVERSEAS_LABELS = labelsById(CONFIG.overseasCities);
@@ -152,12 +156,18 @@ module.exports = async function handler(req, res) {
       rmNote: String(answers.rmNote || '').trim(),
       nps,
       npsNote: String(answers.npsNote || '').trim(),
+      reporting: describe('reporting', answers.reporting, answers.reportingOther),
+      frequency: describe('frequency', answers.frequency, answers.frequencyOther),
       rmCoverage: describe('rmCoverage', answers.rmCoverage, answers.rmCoverageOther),
       coverageNote: String(answers.coverageNote || '').trim(),
       // Rated out of 10 like the NPS, not out of 5 like the star questions —
       // and skippable, so an empty cell means "never used it", not "hated it".
       appRating: Number(answers.appRating) ? `${Math.min(10, Math.max(1, Number(answers.appRating)))}/10` : '',
       appNote: String(answers.appNote || '').trim(),
+      webinars: describe('webinars', answers.webinars, answers.webinarsOther),
+      // Blank means they never answered, which is a "no" — recorded as such
+      // rather than left ambiguous for whoever builds the mailing list.
+      mailOptIn: answers.mailOptIn ? describe('mailOptIn', answers.mailOptIn) : 'No answer',
       newNeeds: describe('newNeeds', answers.newNeeds, answers.newNeedsOther),
       notes,
     });
