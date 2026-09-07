@@ -187,7 +187,7 @@
       { id: 'estate-succession', label: 'Estate & succession planning' },
       { id: 'family-wills', label: 'A Will for every family member', sub: 'Succession planning across the whole family, not just one Will' },
       { id: 'real-estate', label: 'Real estate advisory' },
-      { id: 'family-trust', label: 'Family trust / family office' },
+      { id: 'family-trust', label: 'Family trust' },
       { id: 'nri-global', label: 'NRI / global investing' },
       { id: 'nothing', label: 'Nothing right now — all set' },
       { id: 'other', label: 'Something else', hasOther: true },

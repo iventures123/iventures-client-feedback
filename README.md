@@ -1,6 +1,6 @@
 # iVentures Client Feedback
 
-A private check-in for iVentures Wealth's existing clients — fifteen
+A private check-in for iVentures Wealth's existing clients — sixteen
 mostly-one-tap questions plus an open text box, logged straight to a Google
 Sheet that only the management team sees. No AI, no framework, no build step.
 
@@ -25,6 +25,7 @@ Google review and never shows an answer back to the client's RM.
 | 10 | Staying in touch | Desired contact frequency | Monthly / quarterly / half-yearly / yearly / as needed |
 | 11 | The app | iVentures Wealth app | 1–10, **skippable**, + suggestions box |
 | 12 | The big one | Recommend score | 0–10 slider + optional reason |
+| 12½ | One introduction | **Referrals** — shown only when the recommend score is 7+ | Name + number per person, via the phone's contact picker or typed |
 | 13 | Worth your evening? | Webinar interest | Wills & trusts, fund managers, children's financial literacy, passive income for children |
 | 14 | Staying in the loop | Email opt-in | Explicit, never pre-selected; no answer is recorded as "No answer" |
 | 15 | Looking ahead | New needs | Cross-sell signals, incl. a Will for every family member |
@@ -37,6 +38,24 @@ their answer into a preset.
 Screens are labelled by section ("Just between us") rather than "Step 4 of
 10" — a visible countdown is itself a cue that this will take a while. The
 progress bar still carries position.
+
+### Referrals, and the contact picker
+
+The referral screen uses the browser's **Contact Picker API**, which is
+user-mediated by design: the phone draws the picker, and the page receives
+only the people actually tapped. The address book is never readable by this
+site, and there is no permission prompt to leave hanging.
+
+It exists on Chrome for Android and essentially nowhere else — not Safari on
+iOS, not any desktop browser. So typing a name and number is **not a
+fallback**; it is the primary path for most of this client base, and the
+picker button simply never renders where the API is missing
+(`contactPickerSupported()` feature-detects rather than sniffing the user
+agent).
+
+The screen is skipped entirely for anyone scoring below 7 on the recommend
+question. Asking a client who has just scored you a 3 who else you can call
+turns a feedback form into a sales form, and they notice.
 
 ### The one required field
 

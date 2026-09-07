@@ -20,6 +20,7 @@ const ICONS = {
   relationship: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>',
   recommend: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>',
   doc: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>',
+  share: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>',
   mail: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><polyline points="22,6 12,13 2,6"></polyline></svg>',
   calendar: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>',
   app: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>',
@@ -184,6 +185,20 @@ const QUESTIONS = [
     sub: 'Drag to a number from 0 (not likely) to 10 (extremely likely).',
     sliderMin: 0, sliderMax: 10, sliderLowLabel: 'Not likely', sliderHighLabel: 'Extremely likely',
     followUp: { key: 'npsNote', label: 'What’s the main reason for that score? (optional)', placeholder: 'Totally optional, but it helps us a lot…' },
+  },
+  {
+    // Only asked of someone who has just said they'd recommend us. Asking a
+    // detractor who they can introduce us to, seconds after they scored us a
+    // 3, reads as tone-deaf and is how a feedback form turns into a sales
+    // form. `showIf` skips the screen entirely rather than softening it.
+    key: 'referrals', type: 'referrals', icon: ICONS.share,
+    eyebrow: 'One introduction',
+    showIf: (a) => Number(a.nps) >= 7,
+    title: () => (firstName()
+      ? `${firstName()}, is there someone who should be having this conversation?`
+      : 'Is there someone who should be having this conversation?'),
+    sub: 'Entirely optional. Pick them from your contacts or type the details — we will mention your name when we reach out, and nothing goes to them until we do.',
+    optional: true,
   },
   {
     key: 'webinars', type: 'multi', icon: ICONS.calendar,
@@ -517,6 +532,11 @@ function renderQuestion(q) {
 
   if (q.type === 'slider') {
     renderSlider(q);
+    return;
+  }
+
+  if (q.type === 'referrals') {
+    renderReferrals(q);
     return;
   }
 
@@ -951,7 +971,189 @@ function isTextAnswerValid(q) {
   return !!value.trim();
 }
 
+// ---------------------------------------------------------------------------
+// Referrals
+// ---------------------------------------------------------------------------
+// A short list of {name, phone} the client chooses to share. Two ways in:
+// the browser's Contact Picker where it exists, and typing, which always
+// works. Manual entry is NOT a fallback bolted on afterwards — the picker is
+// Chrome-on-Android only, and a good share of this client base is on an
+// iPhone, where typing is the only path there will ever be.
+const MAX_REFERRALS = 10;
+
+// Feature-detect rather than sniff the user agent. Safari, Firefox and every
+// desktop browser land here and simply never see the button.
+function contactPickerSupported() {
+  return typeof navigator !== 'undefined'
+    && 'contacts' in navigator
+    && navigator.contacts
+    && typeof navigator.contacts.select === 'function'
+    && 'ContactsManager' in window;
+}
+
+function referralList(q) {
+  return Array.isArray(state.answers[q.key]) ? state.answers[q.key] : [];
+}
+
+// The picker is entirely user-mediated: the browser draws it, and the page
+// receives only the people tapped. We never read, and could never read, the
+// address book itself.
+async function pickFromContacts(q) {
+  let picked;
+  try {
+    picked = await navigator.contacts.select(['name', 'tel'], { multiple: true });
+  } catch (err) {
+    // Cancelled, or the browser refused. Nothing to report — the typing path
+    // is right there.
+    return;
+  }
+  if (!picked || !picked.length) return;
+
+  const list = referralList(q).slice();
+  picked.forEach((c) => {
+    const name = (c.name && c.name[0] ? String(c.name[0]) : '').trim().slice(0, 100);
+    const phone = (c.tel && c.tel[0] ? String(c.tel[0]) : '').trim().slice(0, 30);
+    if (!name && !phone) return;
+    // Same person twice (picked already, or listed twice on the phone) is a
+    // duplicate row for whoever calls them.
+    const dupe = list.some((r) => r.phone.replace(/\D/g, '') === phone.replace(/\D/g, '') && phone);
+    if (!dupe) list.push({ name, phone });
+  });
+  state.answers[q.key] = list.slice(0, MAX_REFERRALS);
+  buzz();
+  renderReferrals(q);
+}
+
+function renderReferrals(q) {
+  el.choiceGrid.hidden = false;
+  el.textInput.hidden = true;
+  el.choiceGrid.className = 'choice-grid referral-grid';
+  el.choiceGrid.innerHTML = '';
+
+  const list = referralList(q);
+  const wrap = document.createElement('div');
+  wrap.className = 'referral-wrap';
+
+  if (contactPickerSupported() && list.length < MAX_REFERRALS) {
+    const pick = document.createElement('button');
+    pick.type = 'button';
+    pick.className = 'btn btn-secondary referral-pick';
+    pick.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg><span>Choose from my contacts</span>';
+    pick.addEventListener('click', () => pickFromContacts(q));
+    wrap.appendChild(pick);
+
+    const hint = document.createElement('p');
+    hint.className = 'referral-privacy';
+    hint.textContent = 'Your phone shows you the picker — we only ever receive the people you tap.';
+    wrap.appendChild(hint);
+
+    const or = document.createElement('p');
+    or.className = 'referral-or';
+    or.innerHTML = '<span>or type their details</span>';
+    wrap.appendChild(or);
+  }
+
+  if (list.length < MAX_REFERRALS) {
+    const form = document.createElement('div');
+    form.className = 'referral-form';
+
+    const nameIn = document.createElement('input');
+    nameIn.type = 'text'; nameIn.className = 'text-input referral-input';
+    nameIn.placeholder = 'Their name'; nameIn.maxLength = 100;
+    nameIn.setAttribute('aria-label', 'Name of the person you are introducing');
+
+    const telIn = document.createElement('input');
+    telIn.type = 'tel'; telIn.className = 'text-input referral-input';
+    telIn.placeholder = 'Their number'; telIn.maxLength = 30; telIn.inputMode = 'tel';
+    telIn.setAttribute('aria-label', 'Their phone number');
+
+    const add = document.createElement('button');
+    add.type = 'button'; add.className = 'btn btn-secondary referral-add';
+    add.textContent = 'Add';
+
+    const valid = () => {
+      const digits = telIn.value.replace(/\D/g, '');
+      return nameIn.value.trim().length > 0 && digits.length >= 7 && digits.length <= 15;
+    };
+    const sync = () => { add.disabled = !valid(); };
+    sync();
+    nameIn.addEventListener('input', sync);
+    telIn.addEventListener('input', sync);
+
+    const commit = () => {
+      if (!valid()) return;
+      state.answers[q.key] = referralList(q).concat([{
+        name: nameIn.value.trim().slice(0, 100),
+        phone: telIn.value.trim().slice(0, 30),
+      }]).slice(0, MAX_REFERRALS);
+      buzz();
+      renderReferrals(q);
+      // Straight back to the name field: someone adding one person often has
+      // a second in mind, and hunting for the box again is where they stop.
+      const next = el.choiceGrid.querySelector('.referral-input');
+      if (next) next.focus();
+    };
+    add.addEventListener('click', commit);
+    telIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); commit(); } });
+    nameIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); telIn.focus(); } });
+
+    form.append(nameIn, telIn, add);
+    wrap.appendChild(form);
+  }
+
+  if (list.length) {
+    const ul = document.createElement('ul');
+    ul.className = 'referral-list';
+    ul.setAttribute('aria-label', 'People you are introducing');
+    list.forEach((r, i) => {
+      const li = document.createElement('li');
+      li.className = 'referral-item';
+
+      const text = document.createElement('div');
+      text.className = 'referral-item-text';
+      const nm = document.createElement('strong');
+      nm.textContent = r.name || '(no name given)';
+      const ph = document.createElement('span');
+      ph.textContent = r.phone || '(no number)';
+      text.append(nm, ph);
+
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'referral-remove';
+      remove.setAttribute('aria-label', `Remove ${r.name || 'this person'}`);
+      remove.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+      remove.addEventListener('click', () => {
+        state.answers[q.key] = referralList(q).filter((_, j) => j !== i);
+        buzz();
+        renderReferrals(q);
+      });
+
+      li.append(text, remove);
+      ul.appendChild(li);
+    });
+    wrap.appendChild(ul);
+
+    if (list.length >= MAX_REFERRALS) {
+      const capped = document.createElement('p');
+      capped.className = 'referral-privacy';
+      capped.textContent = `That's ${MAX_REFERRALS} — plenty to be going on with. Thank you.`;
+      wrap.appendChild(capped);
+    }
+  }
+
+  el.choiceGrid.appendChild(wrap);
+
+  // Never gated: this whole screen is a favour, not a requirement.
+  el.continueBtn.hidden = false;
+  el.continueBtn.disabled = false;
+}
+
 function updateContinueVisibility(q) {
+  if (q.type === 'referrals') {
+    el.continueBtn.hidden = false;
+    el.continueBtn.disabled = false;
+    return;
+  }
   if (q.type === 'text') {
     el.continueBtn.hidden = false;
     el.continueBtn.disabled = !isTextAnswerValid(q);
@@ -1000,8 +1202,18 @@ function checkIcon() {
   return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
 }
 
+// A question can opt out of being asked based on earlier answers. Kept as a
+// forward-only skip: Back walks the history entries actually visited, and if
+// someone goes back and changes the answer that hid a question, the next
+// Continue re-evaluates and picks it up.
+function isQuestionActive(q) {
+  return typeof q.showIf === 'function' ? q.showIf(state.answers) : true;
+}
+
 function advance() {
-  goToStep(state.stepIndex + 1);
+  let next = state.stepIndex + 1;
+  while (next < QUESTIONS.length && !isQuestionActive(QUESTIONS[next])) next++;
+  goToStep(next);
 }
 
 function goBack() {

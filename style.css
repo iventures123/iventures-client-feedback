@@ -735,3 +735,53 @@ body { overscroll-behavior-y: contain; }
   .stage { padding: 0 16px; }
   .q-actions { margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; }
 }
+
+/* --- Referrals ----------------------------------------------------------- */
+/* Two ways to add someone: the browser's own contact picker where it exists,
+   and typing, which always works. The picker button is deliberately not the
+   only affordance — it is Chrome-on-Android only. */
+.referral-wrap { display: flex; flex-direction: column; }
+.referral-pick {
+  width: 100%; justify-content: center; gap: 10px; margin-bottom: 10px;
+}
+.referral-privacy {
+  margin: 0 0 4px; font-size: 0.78rem; line-height: 1.5;
+  color: var(--text-secondary); text-align: center;
+}
+/* A labelled rule, so "or type their details" reads as an alternative rather
+   than an instruction to do both. */
+.referral-or {
+  display: flex; align-items: center; gap: 12px;
+  margin: 14px 0 16px; color: var(--text-secondary);
+  font-size: 0.8rem; font-weight: 600;
+}
+.referral-or::before, .referral-or::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+.referral-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: start; }
+.referral-form .referral-input { margin-bottom: 0; }
+.referral-add { white-space: nowrap; padding-left: 20px; padding-right: 20px; }
+.referral-add:disabled { opacity: 0.45; cursor: not-allowed; }
+/* Stacked on a phone: three controls side by side leaves each too narrow to
+   read the placeholder, let alone type a name into. */
+@media (max-width: 560px) {
+  .referral-form { grid-template-columns: 1fr; }
+  .referral-add { width: 100%; }
+}
+.referral-list { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.referral-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--radius-md); padding: 14px 16px; box-shadow: var(--shadow-sm);
+  animation: itemIn 0.3s var(--ease-expo);
+}
+.referral-item-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.referral-item-text strong { font-size: 0.98rem; color: var(--text); overflow-wrap: anywhere; }
+.referral-item-text span { font-size: 0.85rem; color: var(--text-secondary); }
+.referral-remove {
+  flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%;
+  border: 1.5px solid var(--border); background: var(--bg);
+  color: var(--text-secondary); display: grid; place-items: center; cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.referral-remove:hover { color: var(--orange-text); border-color: var(--orange-text); }

@@ -164,6 +164,14 @@ module.exports = async function handler(req, res) {
       // and skippable, so an empty cell means "never used it", not "hated it".
       appRating: Number(answers.appRating) ? `${Math.min(10, Math.max(1, Number(answers.appRating)))}/10` : '',
       appNote: String(answers.appNote || '').trim(),
+      // One cell, one person per line — a Sheet column you can read down and
+      // dial from, rather than JSON someone has to unpick.
+      referrals: Array.isArray(answers.referrals)
+        ? answers.referrals.slice(0, 10)
+            .map((r) => `${clamp(r && r.name, 100).trim()} — ${clamp(r && r.phone, 30).trim()}`.trim())
+            .filter((line) => line && line !== '—')
+            .join('\n')
+        : '',
       webinars: describe('webinars', answers.webinars, answers.webinarsOther),
       // Blank means they never answered, which is a "no" — recorded as such
       // rather than left ambiguous for whoever builds the mailing list.
