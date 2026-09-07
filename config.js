@@ -19,7 +19,7 @@
     tagline: 'Responsibly Yours',
 
     pageTitle: 'iVentures Client Feedback',
-    metaDescription: 'A private, two-minute check-in with iVentures Wealth — seen only by senior management.',
+    metaDescription: 'A private check-in with iVentures Wealth — seen and used only by our team.',
 
     brandPrefix: 'iVentures',
     brandAccent: 'Wealth',
@@ -87,13 +87,26 @@
     // like homework is where people start tapping 4s down the column without
     // reading.
     serviceQualities: [
-      { key: 'qCommunication', label: 'Communication', sub: 'How clearly things get explained to you' },
-      { key: 'qResponsiveness', label: 'Responsiveness', sub: 'How quickly we get back to you' },
-      { key: 'qFollowUps', label: 'Follow-ups', sub: 'Whether we circle back when we say we will' },
-      { key: 'qReporting', label: 'Reporting & presentation', sub: 'How clear your statements and reviews are' },
-      { key: 'qProactivity', label: 'Proactivity', sub: 'Bringing you ideas before you have to ask' },
-      { key: 'qUnderstanding', label: 'Understanding your goals', sub: 'How well we know what you actually want' },
+      { key: 'qMarketKnowledge', label: 'Market knowledge', sub: 'Their grasp of the markets — and how clearly they explain it' },
+      { key: 'qResponsiveness', label: 'Responsiveness', sub: 'Response time — do they call back, do they reply to messages' },
+      { key: 'qFollowUps', label: 'Follow-through', sub: 'Whether they circle back when they say they will' },
+      { key: 'qUnderstanding', label: 'Understanding your goals', sub: 'How well they know what you are actually trying to achieve' },
+      { key: 'qProactivity', label: 'Proactivity', sub: 'Bringing you ideas before you have to ask for them' },
+      { key: 'qReporting', label: 'Reporting & reviews', sub: 'How clear your statements and portfolio reviews are' },
     ],
+
+    // --- What the RM has actually introduced them to -------------------------
+    // A coverage checklist, not a rating: what a client has NEVER been walked
+    // through is the more useful signal, and it arrives as an unticked box
+    // without anyone having to criticise their RM to say so.
+    rmCoverage: [
+      { id: 'fixed-income', label: 'Fixed income', sub: 'Bonds, debt, structured yield' },
+      { id: 'venture', label: 'Startup & venture funds', sub: 'Private markets, VC and AIF opportunities' },
+      { id: 'global-etfs', label: 'Global ETFs beyond India', sub: 'US, UK, Japan, South Korea, China' },
+      { id: 'none', label: 'None of these, so far' },
+      { id: 'other', label: 'Something else', hasOther: true },
+    ],
+    rmCoverageOtherPlaceholder: 'What else have they walked you through?',
 
     // --- Services currently in use -------------------------------------------
     // What the client is ALREADY using, as opposed to `newNeeds` below (what
@@ -124,8 +137,8 @@
     newNeeds: [
       { id: 'tax-planning', label: 'Tax planning' },
       { id: 'estate-succession', label: 'Estate & succession planning' },
+      { id: 'family-wills', label: 'A Will for every family member', sub: 'Succession planning across the whole family, not just one Will' },
       { id: 'real-estate', label: 'Real estate advisory' },
-      { id: 'insurance', label: 'Insurance planning' },
       { id: 'family-trust', label: 'Family trust / family office' },
       { id: 'nri-global', label: 'NRI / global investing' },
       { id: 'nothing', label: 'Nothing right now — all set' },

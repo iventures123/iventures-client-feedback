@@ -8,6 +8,7 @@
 const RM_OPTIONS = CONFIG.team;
 const CITY_OPTIONS = CONFIG.cities;
 const SERVICE_OPTIONS = CONFIG.services;
+const COVERAGE_OPTIONS = CONFIG.rmCoverage;
 const NEW_NEEDS_OPTIONS = CONFIG.newNeeds;
 
 const ICONS = {
@@ -18,6 +19,8 @@ const ICONS = {
   portfolio: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg>',
   relationship: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>',
   recommend: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>',
+  app: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>',
+  globe: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>',
   outcome: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>',
 };
 
@@ -77,9 +80,9 @@ const QUESTIONS = [
   {
     key: 'rm', type: 'single', icon: ICONS.rms,
     eyebrow: 'Your relationship',
-    title: 'Who is your relationship manager at iVentures?',
-    sub: 'This is so we know who your feedback is about — it is never shared back with them.',
-    otherPlaceholder: 'Who do you work with?',
+    title: 'Who is your wealth relationship manager?',
+    sub: 'So we know who your feedback is about. It is never shared back with them.',
+    otherPlaceholder: 'Who do you deal with?',
     options: RM_OPTIONS,
   },
   {
@@ -103,19 +106,53 @@ const QUESTIONS = [
     // you a client is unhappy but never which part to fix — this one does.
     key: 'serviceGrid', type: 'grid', icon: ICONS.relationship,
     eyebrow: 'The day to day',
-    title: 'How are we doing on each of these?',
+    title: () => (selectedRmName() === 'them'
+      ? 'How is your RM doing on each of these?'
+      : `How is ${selectedRmName()} doing on each of these?`),
     sub: 'One tap per row — 1 needs work, 5 is excellent.',
     rows: CONFIG.serviceQualities,
-    followUp: { key: 'serviceNote', label: 'Want to add anything? (optional)', placeholder: 'e.g. a specific interaction, something we missed…' },
+    followUp: { key: 'serviceNote', label: 'Want to add anything? (optional)', placeholder: 'e.g. a specific interaction, something that has been missed…' },
+  },
+  {
+    // Coverage, not a rating. "What has nobody ever shown you" is the more
+    // actionable question of the two, and a client can answer it honestly by
+    // leaving a box unticked — no one has to criticise their RM to say it.
+    key: 'rmCoverage', type: 'multi', icon: ICONS.globe,
+    eyebrow: 'Beyond the basics',
+    title: () => (selectedRmName() === 'them'
+      ? 'Which of these has your RM actually walked you through?'
+      : `Which of these has ${selectedRmName()} actually walked you through?`),
+    sub: 'Tick anything they have genuinely explained or given you access to. Whatever you leave blank tells us where to do better.',
+    display: 'chips',
+    otherPlaceholder: CONFIG.rmCoverageOtherPlaceholder,
+    exclusiveOption: 'none',
+    options: COVERAGE_OPTIONS,
+    followUp: { key: 'coverageNote', label: 'Anything here you would want to hear more about? (optional)', placeholder: 'e.g. I would like to understand global ETFs properly…' },
   },
   {
     key: 'rmRating', type: 'stars', icon: ICONS.name,
     eyebrow: 'Just between us',
-    // Function form so the title updates with whichever RM was picked on the
-    // previous screen — same mechanism as api/submit's dynamic labels.
-    title: () => `Personally, how has ${selectedRmName()} been for you?`,
-    sub: 'This answer is for our team’s eyes only — never shared with your RM.',
-    followUp: { key: 'rmNote', label: 'Anything you’d like to tell us about them? (optional)', placeholder: 'Whatever you’d say if they weren’t in the room…' },
+    // Deliberately AFTER the skillset grid and the coverage checklist: this
+    // is the overall verdict, and people give a truer one once they've been
+    // made to think about the parts rather than before.
+    title: () => (selectedRmName() === 'them'
+      ? 'Overall, how would you rate your RM across all of this?'
+      : `Overall, how would you rate ${selectedRmName()} across all of this?`),
+    sub: 'Everything together — knowledge, responsiveness, ideas, the lot. For our team\u2019s eyes only, never shared with your RM.',
+    followUp: { key: 'rmNote', label: 'Anything you\u2019d like to tell us about them? (optional)', placeholder: 'Whatever you\u2019d say if they weren\u2019t in the room\u2026' },
+  },
+  {
+    // The app is a different thing from the person — someone can love their
+    // RM and find the app unusable, and a single "how are we doing" would
+    // never separate the two. Optional, because plenty of clients have never
+    // opened it and forcing a score there is how you get noise.
+    key: 'appRating', type: 'slider', icon: ICONS.app,
+    eyebrow: 'The app',
+    title: 'How is your experience with the iVentures Wealth app?',
+    sub: 'Drag to rate, and tell us anything that would make it better. Never used it? Just skip ahead.',
+    optional: true,
+    sliderMin: 1, sliderMax: 10, sliderLowLabel: 'Needs work', sliderHighLabel: 'Excellent',
+    followUp: { key: 'appNote', label: 'Any feedback or suggestions to improve it? (optional)', placeholder: 'e.g. what you wish it showed, what is hard to find\u2026' },
   },
   {
     key: 'nps', type: 'slider', icon: ICONS.recommend,
@@ -492,15 +529,19 @@ function renderQuestion(q) {
           paintChoice(btn, set.has(opt.id));
         }
         syncOtherInput(q);
+        toggleFollowUp(q);
         updateContinueVisibility(q);
       } else {
         state.answers[q.key] = opt.id;
         el.choiceGrid.querySelectorAll('.choice').forEach((b) => paintChoice(b, b === btn));
         syncOtherInput(q);
+        toggleFollowUp(q);
         updateContinueVisibility(q);
         if (opt.hasOther) {
           el.otherInput.focus();
-        } else if (!q.pills) {
+        } else if (!q.pills && !q.followUp) {
+          // Auto-advance would scroll straight past a follow-up box the
+          // client never got to see, so a question with one waits.
           setTimeout(() => advance(), 300);
         }
       }
@@ -509,8 +550,30 @@ function renderQuestion(q) {
     el.choiceGrid.appendChild(btn);
   });
 
+  // Choice questions get an optional comment box as well, so "anything you'd
+  // want to hear more about" isn't only askable on a rating screen. Hidden
+  // until something is picked — a comment box above an untouched list of
+  // chips just reads as more work.
+  renderFollowUp(q, el.choiceGrid, hasSelection(q));
+
   syncOtherInput(q);
   updateContinueVisibility(q);
+}
+
+// True once this question has at least one option selected, for either shape
+// of answer (a single id, or an array of them).
+function hasSelection(q) {
+  const current = state.answers[q.key];
+  return Array.isArray(current) ? current.length > 0 : !!current;
+}
+
+// Shows the follow-up box once the question has an answer. Needed because the
+// choice grid repaints buttons in place rather than re-rendering, so nothing
+// else would ever unhide it.
+function toggleFollowUp(q) {
+  if (!q.followUp) return;
+  const wrap = el.choiceGrid.querySelector('.rating-followup');
+  if (wrap) wrap.hidden = !hasSelection(q);
 }
 
 // Advisory only — these fields are optional and this never blocks Continue.
@@ -830,8 +893,10 @@ function renderSlider(q) {
 
   el.continueBtn.hidden = false;
   // 0 is a valid, meaningful NPS answer, so gate on "has it been touched",
-  // not on truthiness the way the star questions do.
-  el.continueBtn.disabled = !hasAnswer;
+  // not on truthiness the way the star questions do. An `optional` slider
+  // (the app question — plenty of clients have never opened it) never gates
+  // at all.
+  el.continueBtn.disabled = q.optional ? false : !hasAnswer;
 }
 
 // One rule for whether a text question is answered well enough to move on,

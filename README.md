@@ -1,6 +1,6 @@
 # iVentures Client Feedback
 
-A private, ~3-minute check-in for iVentures Wealth's existing clients — nine
+A private, ~3-minute check-in for iVentures Wealth's existing clients — eleven
 mostly-one-tap questions plus an open text box, logged straight to a Google
 Sheet that only the management team sees. No AI, no framework, no build step.
 
@@ -15,14 +15,16 @@ Google review and never shows an answer back to the client's RM.
 |---|---|---|---|
 | 1 | First things first | Name (+ city) | Who's answering, and where they're based |
 | 2 | So we can reach you | **Mobile (required) + email (optional)** | The number to call them back on |
-| 3 | Your relationship | Which RM | Who the feedback is about |
+| 3 | Your relationship | Which wealth RM | Who the feedback is about |
 | 4 | What we look after | Services currently using | The shape of the existing relationship |
 | 5 | Your portfolio | Portfolio & performance | 1–5 + optional note |
-| 6 | The day to day | **How are we doing on each of these?** | Six sub-parts, 1–5 each: communication, responsiveness, follow-ups, reporting & presentation, proactivity, understanding goals — plus an optional note |
-| 7 | Just between us | "How has [RM] been for you personally" | 1–5 + optional note, RM's first name filled in live |
-| 8 | The big one | Recommend score | 0–10 slider + optional reason |
-| 9 | Looking ahead | New needs | Multi-select cross-sell signals |
-| — | Last one | Anything else | Optional open note, then Thank You |
+| 6 | The day to day | **How is [RM] doing on each of these?** | Six skillsets, 1–5 each: market knowledge, responsiveness, follow-through, understanding goals, proactivity, reporting — plus a note |
+| 7 | Beyond the basics | **What has [RM] walked you through?** | Coverage checklist: fixed income, startup & venture funds, global ETFs beyond India (US/UK/Japan/South Korea/China) |
+| 8 | Just between us | Overall verdict on [RM] | 1–5 across everything above, + optional note |
+| 9 | The app | iVentures Wealth app | 1–10, **skippable**, + suggestions box |
+| 10 | The big one | Recommend score | 0–10 slider + optional reason |
+| 11 | Looking ahead | New needs | Cross-sell signals, incl. a Will for every family member |
+| — | Last one | Feedback, suggestions or complaints | Optional open box, then Thank You |
 
 Every choice question carries a free-text "Other" option, and every rating
 question has an optional comment box, so a client is never forced to squeeze
@@ -53,10 +55,12 @@ will ever read it — that promise is stated on the welcome screen and repeated
 right before the RM rating. **The Sheet this logs to should only ever be shared
 with the management team, never with RMs, or that promise breaks.**
 
-Question 6 is the one that earns its keep on a call: a single "rate our
+Questions 6 and 7 are the ones that earn their keep on a call: a single "rate our
 service" star tells you a client is unhappy but never which part to fix.
 Six sub-parts on one screen tell you it's follow-ups, not communication —
-which is a conversation you can actually have with an RM.
+which is a conversation you can actually have with an RM. Question 7 does the
+same job by omission: an unticked "global ETFs" box says the client has never
+been shown them, without anyone having to criticise their RM to say so.
 
 ## How it works
 
@@ -133,10 +137,12 @@ prefer it.
 
 - **RM / relationship manager list**: `team` in `config.js`.
 - **Services currently using**: `services` in `config.js`.
-- **Service-quality sub-parts** (question 6): `serviceQualities` in `config.js`.
-  Adding a row there also needs its key + column header added to
-  `QUALITY_COLUMNS` in `apps-script/Code.gs`, and a redeploy of the script —
-  nothing else changes.
+- **RM skillsets** (question 6): `serviceQualities` in `config.js`. Adding a
+  row there also needs its key + column header added to `QUALITY_COLUMNS` in
+  `apps-script/Code.gs`, and a redeploy of the script — nothing else changes.
+- **Coverage checklist** (question 7): `rmCoverage` in `config.js`. Options
+  here are plain chips, so adding one needs no Sheet change — they all land in
+  the single "Walked Through" column.
 - **Cities**: `cities` / `overseasCities` in `config.js`.
 - **"New needs" options**: `newNeeds` in `config.js`.
 - **Question wording, order, section labels**: `QUESTIONS` array in `app.js`

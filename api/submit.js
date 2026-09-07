@@ -40,6 +40,7 @@ const LABELS = {
   city: labelsById(CONFIG.cities),
   rm: labelsById(CONFIG.team),
   services: labelsById(CONFIG.services),
+  rmCoverage: labelsById(CONFIG.rmCoverage),
   newNeeds: labelsById(CONFIG.newNeeds),
 };
 const OVERSEAS_LABELS = labelsById(CONFIG.overseasCities);
@@ -79,7 +80,7 @@ function describeCity(answers) {
 // WHOLE ROW if one cell is oversized — so free text is clamped well below
 // that on arrival, generous enough that no genuine answer is ever touched.
 const TEXT_LIMITS = { name: 100, phone: 30, email: 100, notes: 1200, other: 200, followUp: 400 };
-const FOLLOW_UP_KEYS = ['portfolioNote', 'serviceNote', 'rmNote', 'npsNote'];
+const FOLLOW_UP_KEYS = ['portfolioNote', 'serviceNote', 'coverageNote', 'rmNote', 'npsNote', 'appNote'];
 
 function clamp(value, max) {
   return String(value == null ? '' : value).slice(0, max);
@@ -151,6 +152,12 @@ module.exports = async function handler(req, res) {
       rmNote: String(answers.rmNote || '').trim(),
       nps,
       npsNote: String(answers.npsNote || '').trim(),
+      rmCoverage: describe('rmCoverage', answers.rmCoverage, answers.rmCoverageOther),
+      coverageNote: String(answers.coverageNote || '').trim(),
+      // Rated out of 10 like the NPS, not out of 5 like the star questions —
+      // and skippable, so an empty cell means "never used it", not "hated it".
+      appRating: Number(answers.appRating) ? `${Math.min(10, Math.max(1, Number(answers.appRating)))}/10` : '',
+      appNote: String(answers.appNote || '').trim(),
       newNeeds: describe('newNeeds', answers.newNeeds, answers.newNeedsOther),
       notes,
     });

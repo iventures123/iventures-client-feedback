@@ -11,12 +11,12 @@ const SHEET_NAME = 'Client Feedback';
 // `serviceQualities` in config.js — add a row there and add its key + header
 // here, and nothing else needs to change.
 const QUALITY_COLUMNS = [
-  { key: 'qCommunication', header: 'Communication' },
-  { key: 'qResponsiveness', header: 'Responsiveness' },
-  { key: 'qFollowUps', header: 'Follow-ups' },
-  { key: 'qReporting', header: 'Reporting & Presentation' },
-  { key: 'qProactivity', header: 'Proactivity' },
-  { key: 'qUnderstanding', header: 'Understanding Goals' },
+  { key: 'qMarketKnowledge', header: 'RM: Market Knowledge' },
+  { key: 'qResponsiveness', header: 'RM: Responsiveness' },
+  { key: 'qFollowUps', header: 'RM: Follow-through' },
+  { key: 'qUnderstanding', header: 'RM: Understanding Goals' },
+  { key: 'qProactivity', header: 'RM: Proactivity' },
+  { key: 'qReporting', header: 'RM: Reporting & Reviews' },
 ];
 
 const HEADERS = [
@@ -25,8 +25,11 @@ const HEADERS = [
 ].concat(
   QUALITY_COLUMNS.map(function (c) { return c.header; })
 ).concat([
-  'Service Note', 'RM Rating', 'RM Note',
-  'Recommend Score (0-10)', 'Recommend Reason', 'New Needs', 'Anything Else',
+  'RM Note (day to day)', 'Walked Through', 'Wants To Hear More About',
+  'RM Rating (overall)', 'RM Note',
+  'App Rating (1-10)', 'App Feedback',
+  'Recommend Score (0-10)', 'Recommend Reason', 'New Needs',
+  'Feedback / Suggestions / Complaints',
 ]);
 
 // Google Sheets treats any cell value starting with =, +, -, or @ as a
@@ -59,8 +62,12 @@ function doPost(e) {
     QUALITY_COLUMNS.map(function (c) { return sanitizeForSheet(qualities[c.key]); })
   ).concat([
     sanitizeForSheet(data.serviceNote),
+    sanitizeForSheet(data.rmCoverage),
+    sanitizeForSheet(data.coverageNote),
     sanitizeForSheet(data.rmRating),
     sanitizeForSheet(data.rmNote),
+    sanitizeForSheet(data.appRating),
+    sanitizeForSheet(data.appNote),
     sanitizeForSheet(data.nps),
     sanitizeForSheet(data.npsNote),
     sanitizeForSheet(data.newNeeds),
@@ -102,7 +109,7 @@ function formatSheet(sheet, headers) {
   // so the whole quality block stays readable side by side on one screen.
   var widths = [150, 150, 120, 180, 100, 180, 260, 90, 220]
     .concat(QUALITY_COLUMNS.map(function () { return 75; }))
-    .concat([220, 90, 220, 110, 220, 220, 320]);
+    .concat([220, 240, 220, 90, 220, 90, 240, 110, 220, 220, 340]);
   for (var i = 0; i < headers.length && i < widths.length; i++) {
     sheet.setColumnWidth(i + 1, widths[i]);
   }
