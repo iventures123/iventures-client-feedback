@@ -1192,14 +1192,17 @@ function renderReferralBlock(q, wrap) {
 
   const heading = document.createElement('p');
   heading.className = 'referral-heading';
+  // "Finances" is the word a bank uses; "wealth deserves the same attention"
+  // is the one a client uses, and it flatters both sides of the introduction
+  // — it implies the attention they are getting is worth passing on.
   heading.textContent = firstName()
-    ? `${firstName()}, is there someone in your inner circle whose finances we could look after?`
-    : 'Is there someone in your inner circle whose finances we could look after?';
+    ? `${firstName()}, is there someone in your circle whose wealth deserves the same attention?`
+    : 'Is there someone in your circle whose wealth deserves the same attention?';
   wrap.appendChild(heading);
 
   const blurb = document.createElement('p');
   blurb.className = 'referral-privacy';
-  blurb.textContent = 'Entirely optional. Leave a name and number and we will introduce ourselves properly, mentioning you — nothing reaches them before that.';
+  blurb.textContent = 'Entirely optional. Leave a name and number and we will reach out personally, with your introduction — never before it.';
   wrap.appendChild(blurb);
 
   const list = referralList(q);
