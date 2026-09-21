@@ -182,7 +182,7 @@ h1 .accent { color: var(--orange-text); font-style: italic; }
 .btn-ghost { background: transparent; color: var(--text-secondary); padding: 14px 18px; font-size: 0.95rem; }
 .btn-ghost:hover { color: var(--text); }
 .btn-large { width: 100%; max-width: 320px; padding: 16px 24px; font-size: 1.05rem; }
-.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
 
 /* Question screens */
 .q-icon { width: 46px; height: 46px; border-radius: 14px; background: linear-gradient(135deg, var(--blue-accent-light), var(--bronze-light)); color: var(--navy); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; box-shadow: var(--shadow-sm); }

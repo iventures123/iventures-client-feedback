@@ -30,7 +30,6 @@
 
     // --- Welcome screen copy ---------------------------------------------
     hero: {
-      badge: '3 minutes · Seen and used only by our team',
       titlePrefix: 'iVentures Private',
       titleAccent: 'Team Assessment',
       titleSuffix: 'Survey',
@@ -54,6 +53,7 @@
       { id: 'krishna', label: 'Krishna Makhariya', sub: 'CIO & Head of Research' },
       { id: 'nitin', label: 'Nitin Jindal', sub: 'Executive Director, Head of Global Markets & Compliance' },
       { id: 'rishi', label: 'Rishi Kapur', sub: 'Executive Director, Private Client Group' },
+      { id: 'jitender', label: 'Jitender Chaudhary', sub: 'Relationship Manager' },
       { id: 'girisha', label: 'Girisha Arora', sub: 'Assistant Vice President' },
       { id: 'other', label: 'Someone else', sub: 'Tell us who', hasOther: true },
     ],
@@ -89,11 +89,8 @@
     serviceQualities: [
       { key: 'qMarketKnowledge', label: 'Market knowledge', sub: 'Their grasp of the markets — and how clearly they explain it' },
       { key: 'qResponsiveness', label: 'Responsiveness', sub: 'Response time — do they call back, do they reply to messages' },
-      { key: 'qFollowUps', label: 'Follow-through', sub: 'Whether they circle back when they say they will' },
       { key: 'qUnderstanding', label: 'Understanding your goals', sub: 'How well they know what you are actually trying to achieve' },
-      { key: 'qNewIdeas', label: 'Explaining new products', sub: 'Walking you through AIF, PMS, fixed income and newer ideas' },
       { key: 'qProactivity', label: 'Proactivity', sub: 'Bringing you ideas before you have to ask for them' },
-      { key: 'qReporting', label: 'Reporting & reviews', sub: 'How clear your statements and portfolio reviews are' },
     ],
 
     // --- What the RM has actually introduced them to -------------------------

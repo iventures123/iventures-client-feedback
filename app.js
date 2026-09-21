@@ -64,7 +64,7 @@ function rmLabelById(id) {
 
 function selectedRmName() {
   const label = rmLabelById(primaryRmId());
-  return label ? label.split(' ')[0] : 'them';
+  return label || 'them';
 }
 
 const QUESTIONS = [
@@ -90,19 +90,14 @@ const QUESTIONS = [
     // everyone else isn't — the city pill on the previous screen already
     // told us which.
     sub: () => (state.answers.city === 'overseas'
-      ? 'So Nirmal or the team can call you back personally. Please include your country code. It stays with our team.'
-      : 'So Nirmal or the team can call you back personally about anything you raise. It stays with our team.'),
-    placeholder: 'e.g. 98765 43210',
-    fieldLabel: 'Mobile number (required)',
-    inputType: 'tel', autocomplete: 'tel', inputMode: 'tel',
-    // Deliberately a plausibility check, not a format check: clients here are
-    // in Delhi, Dubai and Singapore, so anything from 7 to 15 digits is fair
-    // game (that's the E.164 range). A stricter "10 digits" rule would lock
-    // out every NRI on the list.
-    validate: (value) => {
-      const digits = String(value || '').replace(/\D/g, '');
-      return digits.length >= 7 && digits.length <= 15;
-    },
+      ? 'So Nirmal or the team can call you back personally. Digits only — 12 in all, including your country code. It stays with our team.'
+      : 'So Nirmal or the team can call you back personally about anything you raise. Digits only — 12 in all, including the country code (India: 91 + your 10-digit number). It stays with our team.'),
+    placeholder: 'e.g. 919876543210',
+    fieldLabel: 'Mobile number with country code (required)',
+    inputType: 'tel', autocomplete: 'tel', inputMode: 'numeric',
+    digitsOnly: true, digitLength: 12,
+    // Fixed at 12 digits including the country code (team's call), digits only.
+    validate: (value) => /^\d{12}$/.test(String(value || '')),
     secondary: {
       key: 'email', label: 'Email (required)', placeholder: 'e.g. vikram@email.com',
       inputType: 'email', autocomplete: 'email', inputMode: 'email',
@@ -174,22 +169,6 @@ const QUESTIONS = [
     sub: 'One tap per row — 1 needs work, 5 is excellent.',
     rows: CONFIG.serviceQualities,
     followUp: { key: 'serviceNote', label: 'Want to add anything? (optional)', placeholder: 'e.g. a specific interaction, something that has been missed…' },
-  },
-  {
-    // Coverage, not a rating. "What has nobody ever shown you" is the more
-    // actionable question of the two, and a client can answer it honestly by
-    // leaving a box unticked — no one has to criticise their RM to say it.
-    key: 'rmCoverage', type: 'multi', icon: ICONS.globe,
-    eyebrow: 'Beyond the basics',
-    title: () => (selectedRmName() === 'them'
-      ? 'Which of these has your RM actually walked you through?'
-      : `Which of these has ${selectedRmName()} actually walked you through?`),
-    sub: 'Tick anything they have genuinely explained or given you access to. Whatever you leave blank tells us where to do better.',
-    display: 'chips',
-    otherPlaceholder: CONFIG.rmCoverageOtherPlaceholder,
-    exclusiveOption: 'none',
-    options: COVERAGE_OPTIONS,
-    followUp: { key: 'coverageNote', label: 'Anything here you would want to hear more about? (optional)', placeholder: 'e.g. I would like to understand global ETFs properly…' },
   },
   {
     key: 'rmRating', type: 'stars', icon: ICONS.name,
@@ -393,8 +372,8 @@ function updateProgress() {
   el.progressTrack.hidden = false;
   el.progressLabel.hidden = false;
   const step = Math.min(state.stepIndex + 1, totalSteps);
-  const pct = Math.round((step / (totalSteps + 1)) * 100);
-  const milestone = pct < 40 ? 'Getting started' : pct < 75 ? 'Halfway there' : 'Almost done';
+  const pct = state.submitted ? 100 : Math.round((step / (totalSteps + 1)) * 100);
+  const milestone = state.submitted ? 'Complete' : pct < 40 ? 'Getting started' : pct < 75 ? 'Halfway there' : 'Almost done';
   el.progressFill.style.width = pct + '%';
   el.progressLabel.textContent = `${milestone} · ${pct}%`;
   el.progressLabel.classList.toggle('progress-label-final', pct >= 75);
@@ -552,6 +531,9 @@ function renderQuestion(q) {
     el.textInput.inputMode = q.inputMode || '';
     el.textInput.value = state.answers[q.key] || '';
     el.textInput.oninput = () => {
+      // No letters or symbols, and no more than the fixed length — done on
+      // the value rather than maxlength so a pasted "+91 98765 43210" survives.
+      if (q.digitsOnly) el.textInput.value = el.textInput.value.replace(/\D/g, '').slice(0, q.digitLength);
       state.answers[q.key] = el.textInput.value;
       updateContinueVisibility(q);
       updateContactHint(q);
@@ -667,13 +649,7 @@ function renderQuestion(q) {
         syncOtherInput(q);
         toggleFollowUp(q);
         updateContinueVisibility(q);
-        if (opt.hasOther) {
-          el.otherInput.focus();
-        } else if (!q.pills && !q.followUp) {
-          // Auto-advance would scroll straight past a follow-up box the
-          // client never got to see, so a question with one waits.
-          setTimeout(() => advance(), 300);
-        }
+        if (opt.hasOther) el.otherInput.focus();
       }
     });
 
@@ -755,7 +731,7 @@ function updateContactHint(q) {
   if (phoneBad && emailBad) {
     el.contactHint.textContent = 'That number and that email address both look incomplete — please check them.';
   } else if (phoneBad) {
-    el.contactHint.textContent = 'That number looks incomplete — please check it so we can reach you.';
+    el.contactHint.textContent = 'That number needs exactly 12 digits, including the country code — please check it.';
   } else {
     el.contactHint.textContent = 'That email address does not look right — please check it.';
   }
@@ -1047,6 +1023,11 @@ function renderSlider(q) {
     el.continueBtn.disabled = false;
   });
   input.addEventListener('change', () => valueDisplay.setAttribute('aria-live', 'polite'));
+  // Releasing on the starting value fires no 'input' event, so the midpoint
+  // (5) could never be picked and Continue stayed disabled. Treat it as one.
+  input.addEventListener('pointerup', () => {
+    if (input.classList.contains('slider-untouched')) input.dispatchEvent(new Event('input'));
+  });
 
   wrap.append(valueDisplay, caption, input, labels);
   el.choiceGrid.appendChild(wrap);
@@ -1267,7 +1248,7 @@ function renderReferralBlock(q, wrap) {
     const sync = () => { add.disabled = !valid(); };
     sync();
     nameIn.addEventListener('input', sync);
-    telIn.addEventListener('input', sync);
+    telIn.addEventListener('input', () => { telIn.value = telIn.value.replace(/[^\d+\s-]/g, ''); sync(); });
 
     const commit = () => {
       if (!valid()) return;
@@ -1361,17 +1342,10 @@ function updateContinueVisibility(q) {
     // can't auto-advance — the click handler leaves Continue as the only way
     // forward once typing starts, same as the multi-select "Other" case.
     const otherPicked = q.options && questionOptions(q).find((o) => o.hasOther && current === o.id);
-    if (otherPicked) {
-      el.continueBtn.hidden = false;
-      el.continueBtn.disabled = !(state.answers[`${q.key}Other`] || '').trim();
-      return;
-    }
-    if (q.pills) {
-      el.continueBtn.hidden = false;
-      el.continueBtn.disabled = !current;
-      return;
-    }
-    el.continueBtn.hidden = true;
+    el.continueBtn.hidden = false;
+    el.continueBtn.disabled = otherPicked
+      ? !(state.answers[`${q.key}Other`] || '').trim()
+      : !current;
     return;
   }
   el.continueBtn.hidden = true;
@@ -1453,6 +1427,7 @@ function resetApp() {
   pageToken = newPageToken();
   state.answers = {};
   state.notes = '';
+  state.submitted = false;
   showWelcome();
 }
 
@@ -1542,6 +1517,8 @@ async function submitForm() {
 
     const name = firstName();
     el.thankYouTitle.textContent = name ? `Thank you, ${name}` : 'Thank You';
+    state.submitted = true;
+    updateProgress();
     showScreen('thankyou');
   } catch (err) {
     console.error(err);
