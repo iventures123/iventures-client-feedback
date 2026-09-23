@@ -1516,7 +1516,7 @@ async function submitForm() {
     clearInterval(loadingTimer);
 
     const name = firstName();
-    el.thankYouTitle.textContent = name ? `Thank you, ${name}` : 'Thank You';
+    el.thankYouTitle.textContent = name ? `Thanks for your feedback, ${name}` : 'Thanks for your feedback';
     state.submitted = true;
     updateProgress();
     showScreen('thankyou');
