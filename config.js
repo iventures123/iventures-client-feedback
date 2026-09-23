@@ -26,7 +26,7 @@
 
     trustLine: 'SEBI Registered · Reg. No. INA000019026',
 
-    thankYouSubtitle: 'This has been recorded with our team, in confidence. We will use it to put the right people and the right ideas behind you — so you and your family get the best of the iVentures team. If you have flagged something that needs attention, we will follow up personally.',
+    thankYouSubtitle: 'We will read each of these personally. Your views are recorded in confidence and will help us put the right people and the right ideas behind you and your family. If you have flagged something that needs attention, we will follow up with you directly.',
 
     // --- Welcome screen copy ---------------------------------------------
     hero: {
@@ -39,9 +39,9 @@
     },
 
     stats: [
-      { value: '20+', label: 'Years' },
+      { value: '20+', label: 'Years of Excellence' },
+      { value: '2000+', label: 'Families' },
       { value: '₹1200Cr+', label: 'AUM' },
-      { value: '150+', label: 'Investors' },
     ],
 
     // --- Relationship Managers / Client Partners ----------------------------
