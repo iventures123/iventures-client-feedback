@@ -94,13 +94,16 @@ const QUESTIONS = [
       : 'So Nirmal or the team can call you back personally about anything you raise. It stays with our team.'),
     placeholder: 'e.g. 98765 43210',
     fieldLabel: 'Mobile number (required)',
-    inputType: 'tel', autocomplete: 'tel', inputMode: 'numeric',
+    inputType: 'tel', autocomplete: 'tel', inputMode: 'tel',
     digitsOnly: true,
-    // Digits only. India: the normal 10-digit mobile, no 91 needed (a pasted
-    // +91 / 91 / leading 0 is stripped on input). Overseas clients keep 7-15.
+    // Accept any real number in any common format. On input, spaces/dashes/+ are
+    // dropped and an Indian prefix (+91 / 91 / 0 / 0091) is stripped, so
+    // 8826792972, +918826792972 and 918826792972 all become 8826792972.
+    // India: 10-15 digits (a bare 10-digit number, any starting digit, or an
+    // international number if they didn't pick Overseas). Overseas: 7-15.
     validate: (value) => {
       const d = String(value || '');
-      return state.answers.city === 'overseas' ? /^\d{7,15}$/.test(d) : /^[6-9]\d{9}$/.test(d);
+      return state.answers.city === 'overseas' ? /^\d{7,15}$/.test(d) : /^\d{10,15}$/.test(d);
     },
     secondary: {
       key: 'email', label: 'Email (required)', placeholder: 'e.g. vikram@email.com',
@@ -539,13 +542,14 @@ function renderQuestion(q) {
       // the value rather than maxlength so a pasted "+91 98765 43210" survives.
       if (q.digitsOnly) {
         let d = el.textInput.value.replace(/\D/g, '');
-        if (state.answers.city === 'overseas') d = d.slice(0, 15);
-        else {
-          d = d.slice(0, 12);
+        // "00" international dialling prefix (e.g. 0091…, 00971…).
+        if (d.length >= 4 && d.startsWith('00')) d = d.slice(2);
+        if (state.answers.city !== 'overseas') {
           if (d.length === 12 && d.startsWith('91')) d = d.slice(2);
           else if (d.length === 11 && d.startsWith('0')) d = d.slice(1);
         }
-        el.textInput.value = d;
+        d = d.slice(0, 15);
+        if (el.textInput.value !== d) el.textInput.value = d;
       }
       state.answers[q.key] = el.textInput.value;
       updateContinueVisibility(q);
