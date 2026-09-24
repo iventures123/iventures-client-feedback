@@ -90,14 +90,18 @@ const QUESTIONS = [
     // everyone else isn't — the city pill on the previous screen already
     // told us which.
     sub: () => (state.answers.city === 'overseas'
-      ? 'So Nirmal or the team can call you back personally. Digits only — 12 in all, including your country code. It stays with our team.'
-      : 'So Nirmal or the team can call you back personally about anything you raise. Digits only — 12 in all, including the country code (India: 91 + your 10-digit number). It stays with our team.'),
-    placeholder: 'e.g. 919876543210',
-    fieldLabel: 'Mobile number with country code (required)',
+      ? 'So Nirmal or the team can call you back personally. Please include your country code. It stays with our team.'
+      : 'So Nirmal or the team can call you back personally about anything you raise. It stays with our team.'),
+    placeholder: 'e.g. 98765 43210',
+    fieldLabel: 'Mobile number (required)',
     inputType: 'tel', autocomplete: 'tel', inputMode: 'numeric',
-    digitsOnly: true, digitLength: 12,
-    // Fixed at 12 digits including the country code (team's call), digits only.
-    validate: (value) => /^\d{12}$/.test(String(value || '')),
+    digitsOnly: true,
+    // Digits only. India: the normal 10-digit mobile, no 91 needed (a pasted
+    // +91 / 91 / leading 0 is stripped on input). Overseas clients keep 7-15.
+    validate: (value) => {
+      const d = String(value || '');
+      return state.answers.city === 'overseas' ? /^\d{7,15}$/.test(d) : /^[6-9]\d{9}$/.test(d);
+    },
     secondary: {
       key: 'email', label: 'Email (required)', placeholder: 'e.g. vikram@email.com',
       inputType: 'email', autocomplete: 'email', inputMode: 'email',
@@ -533,7 +537,16 @@ function renderQuestion(q) {
     el.textInput.oninput = () => {
       // No letters or symbols, and no more than the fixed length — done on
       // the value rather than maxlength so a pasted "+91 98765 43210" survives.
-      if (q.digitsOnly) el.textInput.value = el.textInput.value.replace(/\D/g, '').slice(0, q.digitLength);
+      if (q.digitsOnly) {
+        let d = el.textInput.value.replace(/\D/g, '');
+        if (state.answers.city === 'overseas') d = d.slice(0, 15);
+        else {
+          d = d.slice(0, 12);
+          if (d.length === 12 && d.startsWith('91')) d = d.slice(2);
+          else if (d.length === 11 && d.startsWith('0')) d = d.slice(1);
+        }
+        el.textInput.value = d;
+      }
       state.answers[q.key] = el.textInput.value;
       updateContinueVisibility(q);
       updateContactHint(q);
@@ -731,7 +744,9 @@ function updateContactHint(q) {
   if (phoneBad && emailBad) {
     el.contactHint.textContent = 'That number and that email address both look incomplete — please check them.';
   } else if (phoneBad) {
-    el.contactHint.textContent = 'That number needs exactly 12 digits, including the country code — please check it.';
+    el.contactHint.textContent = state.answers.city === 'overseas'
+      ? 'That number looks incomplete — please check it, including your country code.'
+      : 'Please enter your 10-digit mobile number.';
   } else {
     el.contactHint.textContent = 'That email address does not look right — please check it.';
   }
