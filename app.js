@@ -92,18 +92,26 @@ const QUESTIONS = [
     sub: () => (state.answers.city === 'overseas'
       ? 'So Nirmal or the team can call you back personally. Please include your country code. It stays with our team.'
       : 'So Nirmal or the team can call you back personally about anything you raise. It stays with our team.'),
-    placeholder: 'e.g. 98765 43210',
+    placeholder: 'e.g. +91 98765 43210',
     fieldLabel: 'Mobile number (required)',
     inputType: 'tel', autocomplete: 'tel', inputMode: 'tel',
-    digitsOnly: true,
-    // Accept any real number in any common format. On input, spaces/dashes/+ are
-    // dropped and an Indian prefix (+91 / 91 / 0 / 0091) is stripped, so
-    // 8826792972, +918826792972 and 918826792972 all become 8826792972.
-    // India: 10-15 digits (a bare 10-digit number, any starting digit, or an
-    // international number if they didn't pick Overseas). Overseas: 7-15.
-    validate: (value) => {
-      const d = String(value || '');
-      return state.answers.city === 'overseas' ? /^\d{7,15}$/.test(d) : /^\d{10,15}$/.test(d);
+    phoneFree: true,
+    // Flexible on purpose: the client can type the number however they like —
+    // with or without +91, spaces, dashes, brackets, or any other country code.
+    // Only letters are dropped. It is saved exactly as typed.
+    // Blocking rule: just needs at least one digit (the field is required).
+    validate: (value) => /\d/.test(String(value || '')),
+    // Soft rule: a gentle warning (never blocks Continue) when the number
+    // doesn't look like a normal 10-digit Indian mobile once a +91 / 91 / 0 /
+    // 0091 prefix is set aside. Overseas clients: warn only outside 7-15 digits.
+    warn: (value) => {
+      let d = String(value || '').replace(/\D/g, '');
+      if (!d) return false;
+      if (state.answers.city === 'overseas') return d.length < 7 || d.length > 15;
+      if (d.startsWith('00')) d = d.slice(2);
+      if (d.length === 12 && d.startsWith('91')) d = d.slice(2);
+      else if (d.length === 11 && d.startsWith('0')) d = d.slice(1);
+      return d.length !== 10;
     },
     secondary: {
       key: 'email', label: 'Email (required)', placeholder: 'e.g. vikram@email.com',
@@ -540,16 +548,11 @@ function renderQuestion(q) {
     el.textInput.oninput = () => {
       // No letters or symbols, and no more than the fixed length — done on
       // the value rather than maxlength so a pasted "+91 98765 43210" survives.
-      if (q.digitsOnly) {
-        let d = el.textInput.value.replace(/\D/g, '');
-        // "00" international dialling prefix (e.g. 0091…, 00971…).
-        if (d.length >= 4 && d.startsWith('00')) d = d.slice(2);
-        if (state.answers.city !== 'overseas') {
-          if (d.length === 12 && d.startsWith('91')) d = d.slice(2);
-          else if (d.length === 11 && d.startsWith('0')) d = d.slice(1);
-        }
-        d = d.slice(0, 15);
-        if (el.textInput.value !== d) el.textInput.value = d;
+      if (q.phoneFree) {
+        // Keep digits and normal phone punctuation (+ space - ( ) .), drop
+        // letters, cap at 25 characters. Nothing is reformatted.
+        const cleaned = el.textInput.value.replace(/[^\d+\s\-().]/g, '').slice(0, 25);
+        if (el.textInput.value !== cleaned) el.textInput.value = cleaned;
       }
       state.answers[q.key] = el.textInput.value;
       updateContinueVisibility(q);
@@ -738,19 +741,32 @@ function updateContactHint(q) {
   // this screen advance", which now folds in both — using it here would blame
   // the number for a bad email address.
   const phoneBad = !!phone && q.validate && !q.validate(phone);
+  const phoneWarn = !!phone && !phoneBad && !!q.warn && q.warn(phone);
   const emailBad = !!email && q.secondary.validate && !q.secondary.validate(email);
 
-  if (!phoneBad && !emailBad) { el.contactHint.hidden = true; return; }
+  if (!phoneBad && !emailBad && !phoneWarn) { el.contactHint.hidden = true; el.contactHint.style.color = ''; return; }
   el.contactHint.hidden = false;
+
+  // Phone looks unusual but is allowed: a soft, amber reminder that never
+  // blocks Continue. Shown on its own, or alongside an email problem.
+  if (phoneWarn) {
+    const warnText = state.answers.city === 'overseas'
+      ? 'Just checking — that number looks unusual. Please make sure it includes your country code. You can still continue.'
+      : 'Just checking — Indian mobile numbers have 10 digits. If this is an overseas number or it is correct, you can still continue.';
+    el.contactHint.textContent = emailBad
+      ? warnText + ' Also, that email address does not look right — please check it.'
+      : warnText;
+    el.contactHint.style.color = emailBad ? '' : '#8a6100';
+    return;
+  }
+  el.contactHint.style.color = '';
 
   // Both fields block Continue now, so neither message may promise the client
   // can carry on regardless.
   if (phoneBad && emailBad) {
     el.contactHint.textContent = 'That number and that email address both look incomplete — please check them.';
   } else if (phoneBad) {
-    el.contactHint.textContent = state.answers.city === 'overseas'
-      ? 'That number looks incomplete — please check it, including your country code.'
-      : 'Please enter your 10-digit mobile number.';
+    el.contactHint.textContent = 'Please enter a phone number we can reach you on.';
   } else {
     el.contactHint.textContent = 'That email address does not look right — please check it.';
   }
